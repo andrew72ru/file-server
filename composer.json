@@ -2,7 +2,7 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": "^7.4",
+        "php": "^7.4.5",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "oneup/flysystem-bundle": "^3.4",
@@ -28,8 +28,7 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "src/",
-            "Andrew72ru\\ChunkUploadBundle\\": "ChunkUploadBundle/"
+            "App\\": "src/"
         }
     },
     "autoload-dev": {

@@ -1,8 +1,0 @@
-chunk_upload:
-  route_params:
-    chunk_size:         '_chunkSize'
-    current_chunk_size: '_currentChunkSize'
-    chunk_number:       '_chunkNumber'
-    total_size:         '_totalSize'
-    file_field:         'docFile'
-    unique_id_field:    '_uniqueId'
