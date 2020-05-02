@@ -1,10 +1,14 @@
 # Read the documentation: https://github.com/1up-lab/OneupFlysystemBundle/tree/master/Resources/doc/index.md
 oneup_flysystem:
   adapters:
-    default_adapter:
+    image.adapter:
       local:
-        directory: '%kernel.cache_dir%/flysystem'
+        directory: '%kernel.cache_dir%/images'
+    video.adapter:
+      local:
+        directory: '%kernel.cache_dir%/video'
   filesystems:
-    default_filesystem:
-      adapter: default_adapter
-      alias: League\Flysystem\Filesystem
+    image.filesystem:
+      adapter: image.adapter
+    video.filesystem:
+      adapter: video.adapter

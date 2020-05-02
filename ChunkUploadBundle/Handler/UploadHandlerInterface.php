@@ -38,7 +38,7 @@ interface UploadHandlerInterface
     /**
      * @return int
      */
-    public function getPercents();
+    public function getPercents(): int;
 
     /**
      * @return File
