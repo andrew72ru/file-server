@@ -1,4 +1,3 @@
-
 chunk_upload:
   route_params:
     chunk_size:         '_chunkSize'
