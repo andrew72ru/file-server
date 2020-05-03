@@ -1,17 +1,14 @@
 <?php
 /**
- * 02.05.2020
+ * 02.05.2020.
  */
 
 declare(strict_types=1);
 
-
 namespace App\Service\Handler;
-
 
 use App\Service\Exception\InvalidCallException;
 use App\Service\FileChunk;
-use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\File;
 
@@ -32,7 +29,6 @@ abstract class AbstractHandler implements HandlerInterface
         $this->chunk = $chunk;
 
         return $this;
-
     }
 
     /**
@@ -43,39 +39,85 @@ abstract class AbstractHandler implements HandlerInterface
         $this->validate();
         $file = $this->getFile();
 
-        $handle = \fopen($file->getRealPath(), 'rb');
-        $result = $this->filesystem->putStream($this->getFilename(), $handle);
-        \fclose($handle);
+        $dirName = $this->tempDirName();
+        if (!\is_dir($dirName) && !\mkdir($dirName) && !\is_dir($dirName)) {
+            throw new \RuntimeException(\sprintf('Directory "%s" was not created', $dirName));
+        }
 
-        return $result;
+        $destName = \sprintf('%s/%s', $dirName, $this->chunk->getNumber());
+        $dst = \fopen($destName, 'ab');
+        $inc = \fopen($file->getRealPath(), 'rb');
+        while ($b = \fread($inc, 4096)) {
+            \fwrite($dst, $b);
+        }
+        \fclose($inc);
+        \fclose($dst);
+
+        if ($this->isFinished()) {
+            $this->merge();
+        }
+
+        return true;
+    }
+
+    protected function merge(): void
+    {
+        $this->validate();
+
+        $dirName = $this->tempDirName();
+        $files = \iterator_to_array(new \FilesystemIterator($dirName));
+        \uasort($files, fn (\SplFileInfo $a, \SplFileInfo $b) => (int) $a->getBasename() > (int) $b->getBasename());
+
+        $dstPath = \sprintf('%s/%s', \sys_get_temp_dir(), $this->getFilename());
+        $dst = \fopen($dstPath, 'ab');
+
+        foreach ($files as $file) {
+            $src = \fopen($file->getRealPath(), 'rb');
+            if ($file->getSize() <= 0) {
+                continue;
+            }
+
+            \fwrite($dst, \fread($src, $file->getSize()));
+            \fclose($src);
+
+            \unlink($file->getRealPath());
+        }
+        \fclose($dst);
+
+        $dstRead = \fopen($dstPath, 'rb');
+        $this->filesystem->putStream($this->getFilename(), $dstRead);
+
+        \fclose($dstRead);
+    }
+
+    protected function tempDirName(): string
+    {
+        return \sprintf('%s/%s', \sys_get_temp_dir(), $this->chunk->getUniqueId());
     }
 
     /**
      * @inheritDoc
-     * @throws FileNotFoundException
      */
     public function isFinished(): bool
     {
         $this->validate();
 
-        return $this->filesystem->getSize($this->getFilename()) >= $this->chunk->getTotalSize();
+        return ($this->chunk->getNumber() + 1) >= $this->chunk->getChunksCount();
     }
 
     /**
      * @inheritDoc
-     * @throws FileNotFoundException
      */
     public function getPercents(): int
     {
         $this->validate();
-        $value = $this->filesystem->getSize($this->getFilename()) / $this->chunk->getTotalSize();
+        $value = $this->chunk->getNumber() / $this->chunk->getChunksCount();
 
-        return (int) \floor($value * 100);
+        return (int) \ceil($value * 100);
     }
 
     /**
      * @inheritDoc
-     * @throws FileNotFoundException
      */
     public function getFullFile(): ?string
     {
@@ -94,7 +136,8 @@ abstract class AbstractHandler implements HandlerInterface
     protected function getFilename(): string
     {
         $this->validate();
-        return sprintf('%s.%s', $this->chunk->getUniqueId(), $this->getFile()->guessExtension() ?: $this->getFile()->getExtension());
+
+        return sprintf('%s.%s', $this->chunk->getUniqueId(), $this->getFile()->guessExtension() ?? $this->getFile()->getExtension());
     }
 
     /**

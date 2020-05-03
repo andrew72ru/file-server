@@ -1,13 +1,11 @@
 <?php
 /**
- * 02.05.2020
+ * 02.05.2020.
  */
 
 declare(strict_types=1);
 
-
 namespace App\Service;
-
 
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,10 +27,11 @@ class FileChunk
     private ?File $file;
 
     /**
-     * Factory method
+     * Factory method.
      *
      * @param Request $request
      * @param File    $file
+     *
      * @return self
      */
     public static function create(Request $request, File $file): self
@@ -62,11 +61,12 @@ class FileChunk
 
     /**
      * FileChunk constructor.
-     * @param int $size
-     * @param int $currentSize
-     * @param int $number
-     * @param int $totalSize
-     * @param string $uniqueId
+     *
+     * @param int       $size
+     * @param int       $currentSize
+     * @param int       $number
+     * @param int       $totalSize
+     * @param string    $uniqueId
      * @param File|null $file
      */
     public function __construct(int $size, int $currentSize, int $number, int $totalSize, string $uniqueId, File $file = null)
@@ -121,11 +121,13 @@ class FileChunk
 
     /**
      * @param File|null $file
+     *
      * @return FileChunk
      */
     public function setFile(?File $file): FileChunk
     {
         $this->file = $file;
+
         return $this;
     }
 
@@ -135,5 +137,13 @@ class FileChunk
     public function getFile(): ?File
     {
         return $this->file;
+    }
+
+    /**
+     * @return int
+     */
+    public function getChunksCount(): int
+    {
+        return (int) \ceil($this->totalSize / $this->size);
     }
 }
