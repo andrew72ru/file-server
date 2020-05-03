@@ -1,0 +1,6 @@
+oneup_flysystem:
+  adapters:
+    image.adapter:
+      memory: ~
+    video.adapter:
+      memory: ~

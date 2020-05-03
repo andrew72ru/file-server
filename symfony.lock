@@ -2,6 +2,9 @@
     "league/flysystem": {
         "version": "1.0.67"
     },
+    "league/flysystem-memory": {
+        "version": "1.0.2"
+    },
     "monolog/monolog": {
         "version": "2.0.2"
     },
@@ -164,6 +167,9 @@
         "version": "v1.15.0"
     },
     "symfony/polyfill-php73": {
+        "version": "v1.15.0"
+    },
+    "symfony/polyfill-uuid": {
         "version": "v1.15.0"
     },
     "symfony/routing": {
