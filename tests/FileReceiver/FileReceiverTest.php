@@ -8,9 +8,9 @@ declare(strict_types=1);
 namespace App\Tests\FileReceiver;
 
 use App\Service\Exception\HandlerNotFoundException;
+use App\Service\Exception\InvalidCallException;
 use App\Service\FileReceiver;
 use App\Service\FileReceiverInterface;
-use App\Service\Handler\HandlerInterface;
 use App\Service\Handler\ImageHandler;
 use App\Service\Handler\VideoHandler;
 use App\Tests\KernelTestCase;
@@ -23,8 +23,8 @@ class FileReceiverTest extends KernelTestCase
         $service = self::$container->get(FileReceiverInterface::class);
         $this->assertInstanceOf(FileReceiver::class, $service);
 
-        $this->assertInstanceOf(HandlerInterface::class, $service->getHandler(ImageHandler::NAME));
-        $this->assertInstanceOf(HandlerInterface::class, $service->getHandler(VideoHandler::NAME));
+        $this->assertInstanceOf(ImageHandler::class, $service->getHandler(ImageHandler::NAME));
+        $this->assertInstanceOf(VideoHandler::class, $service->getHandler(VideoHandler::NAME));
     }
 
     public function testNotExistsHandler(): void
@@ -33,5 +33,15 @@ class FileReceiverTest extends KernelTestCase
         self::bootKernel();
         $service = self::$container->get(FileReceiverInterface::class);
         $service->getHandler('non_existent-handler-name');
+    }
+
+    public function testExceptionWithNoChunkInHandler(): void
+    {
+        $this->expectException(InvalidCallException::class);
+
+        self::bootKernel();
+        $service = self::$container->get(FileReceiverInterface::class);
+        $imageHandler = $service->getHandler(ImageHandler::NAME);
+        $imageHandler->getPercents();
     }
 }

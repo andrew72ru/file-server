@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class ControllerTest extends KernelTestCase
 {
@@ -97,5 +98,42 @@ class ControllerTest extends KernelTestCase
                 $this->assertEquals($file, $origin);
             }
         }
+    }
+
+    public function testRequestWithoutFile(): void
+    {
+        $this->expectException(BadRequestHttpException::class);
+
+        self::bootKernel();
+        $controller = self::$container->get(UploadController::class);
+
+        $request = Request::create('/upload');
+        $controller($request);
+    }
+
+    public function testRequestWithoutHandlerName(): void
+    {
+        $this->expectException(BadRequestHttpException::class);
+
+        self::bootKernel();
+        $controller = self::$container->get(UploadController::class);
+
+        $request = Request::create('/upload');
+        $request->files->set(UploadController::UPLOADED_FIELD, new UploadedFile($this->getDataDir('deserialization_tutorial6.pdf'), 'deserialization_tutorial6.pdf', null, null, true));
+
+        $controller($request);
+    }
+
+    public function testRequestWithWrongHandlerName(): void
+    {
+        $this->expectException(BadRequestHttpException::class);
+
+        self::bootKernel();
+        $controller = self::$container->get(UploadController::class);
+        $request = Request::create('/upload');
+        $request->files->set(UploadController::UPLOADED_FIELD, new UploadedFile($this->getDataDir('deserialization_tutorial6.pdf'), 'deserialization_tutorial6.pdf', null, null, true));
+        $request->request->set(UploadController::HANDLER_NAME_FIELD, 'wrong_handler_name');
+
+        $controller($request);
     }
 }

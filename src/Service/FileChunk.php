@@ -11,7 +11,11 @@ use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
-class FileChunk
+/**
+ * File Chunk representation.
+ * Contains all parameters needed to store a file as chunk (part).
+ */
+final class FileChunk implements FileChunkInterface
 {
     public const CHUNK_SIZE = '_chunkSize';
     public const CURRENT_CHUNK_SIZE = '_currentChunkSize';
@@ -24,7 +28,7 @@ class FileChunk
     private int $number;
     private int $totalSize;
     private string $uniqueId;
-    private ?File $file;
+    private File $file;
 
     /**
      * Factory method.
@@ -62,14 +66,14 @@ class FileChunk
     /**
      * FileChunk constructor.
      *
-     * @param int       $size
-     * @param int       $currentSize
-     * @param int       $number
-     * @param int       $totalSize
-     * @param string    $uniqueId
-     * @param File|null $file
+     * @param int    $size
+     * @param int    $currentSize
+     * @param int    $number
+     * @param int    $totalSize
+     * @param string $uniqueId
+     * @param File   $file
      */
-    public function __construct(int $size, int $currentSize, int $number, int $totalSize, string $uniqueId, File $file = null)
+    protected function __construct(int $size, int $currentSize, int $number, int $totalSize, string $uniqueId, File $file)
     {
         $this->size = $size;
         $this->currentSize = $currentSize;
@@ -120,21 +124,9 @@ class FileChunk
     }
 
     /**
-     * @param File|null $file
-     *
-     * @return FileChunk
+     * @return File
      */
-    public function setFile(?File $file): FileChunk
-    {
-        $this->file = $file;
-
-        return $this;
-    }
-
-    /**
-     * @return File|null
-     */
-    public function getFile(): ?File
+    public function getFile(): File
     {
         return $this->file;
     }

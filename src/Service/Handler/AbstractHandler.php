@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\File\File;
  */
 abstract class AbstractHandler implements HandlerInterface
 {
-    protected ?FileChunk $chunk;
+    protected ?FileChunk $chunk = null;
     protected Filesystem $filesystem;
 
     /**
@@ -73,9 +73,6 @@ abstract class AbstractHandler implements HandlerInterface
 
         foreach ($files as $file) {
             $src = \fopen($file->getRealPath(), 'rb');
-            if ($file->getSize() <= 0) {
-                continue;
-            }
 
             \fwrite($dst, \fread($src, $file->getSize()));
             \fclose($src);
@@ -147,11 +144,7 @@ abstract class AbstractHandler implements HandlerInterface
      */
     protected function getFile(): File
     {
-        if (($file = $this->chunk->getFile()) === null) {
-            throw new InvalidCallException(\sprintf('File is not set to chunk %s', $this->chunk->getUniqueId()));
-        }
-
-        return $file;
+        return $this->chunk->getFile();
     }
 
     /**
@@ -161,9 +154,6 @@ abstract class AbstractHandler implements HandlerInterface
     {
         if ($this->chunk === null) {
             throw new InvalidCallException(\sprintf('You must set \'%s\' instance to handler first', FileChunk::class));
-        }
-        if ($this->chunk->getFile() === null) {
-            throw new InvalidCallException(\sprintf('File is not set to chunk %s', $this->chunk->getUniqueId()));
         }
     }
 }
