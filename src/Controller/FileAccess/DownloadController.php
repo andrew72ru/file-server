@@ -5,12 +5,11 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\FileAccess;
 
-use League\Flysystem\{FileNotFoundException, FilesystemInterface};
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use League\Flysystem\FileNotFoundException;
 use Symfony\Component\HttpFoundation\{HeaderUtils, Response};
-use Symfony\Component\HttpKernel\Exception\{BadRequestHttpException, NotFoundHttpException};
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -18,21 +17,8 @@ use Symfony\Component\Routing\Annotation\Route;
  *
  * @Route(name="download_file", path="/download/{type}/{filename}")
  */
-class DownloadController extends AbstractController
+class DownloadController extends AbstractFileAccessController
 {
-    /**
-     * @var FilesystemInterface[]
-     */
-    private array $filesystems;
-
-    /**
-     * @param FilesystemInterface[] $filesystems
-     */
-    public function __construct(array $filesystems)
-    {
-        $this->filesystems = $filesystems;
-    }
-
     /**
      * @param string $type
      * @param string $filename
@@ -41,10 +27,7 @@ class DownloadController extends AbstractController
      */
     public function __invoke(string $type, string $filename): Response
     {
-        $fs = $this->filesystems[$type] ?? null;
-        if ($fs === null) {
-            throw new BadRequestHttpException(\sprintf('No \'%s\' type registered', $type));
-        }
+        $fs = $this->getFs($type);
 
         try {
             $fileContent = $fs->read($filename);

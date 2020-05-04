@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Download;
 
-use App\Controller\DownloadController;
+use App\Controller\FileAccess\DownloadController;
 use App\Tests\KernelTestCase;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;

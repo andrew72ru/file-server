@@ -31,7 +31,8 @@ services:
     arguments:
       - ['@file_handler.video', '@file_handler.image']
 
-  App\Controller\DownloadController:
+  App\Controller\FileAccess\:
+    resource: '../src/Controller/FileAccess'
     arguments:
       - images: '@oneup_flysystem.image.filesystem_filesystem'
         video: '@oneup_flysystem.video.filesystem_filesystem'
