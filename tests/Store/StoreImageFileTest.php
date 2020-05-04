@@ -46,7 +46,7 @@ class StoreImageFileTest extends KernelTestCase
             FileChunk::UNIQUE_ID => $uuid,
         ]);
         $request->request = $parameters;
-        $request->files->set('upload', new UploadedFile($this->getDataDir('deserialization_tutorial6.pdf'), 'deserialization_tutorial6.pdf', null, null, true));
+        $request->files->set('upload', new UploadedFile($this->getDataDir('deserialization_tutorial6.pdf'), 'deserialization_tutorial6.pdf', 'application/pdf', null, true));
 
         return $request;
     }

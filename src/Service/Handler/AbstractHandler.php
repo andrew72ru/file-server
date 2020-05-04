@@ -70,7 +70,7 @@ abstract class AbstractHandler implements HandlerInterface
 
         $dirName = $this->tempDirName();
         $files = \iterator_to_array(new \FilesystemIterator($dirName));
-        \uasort($files, fn (\SplFileInfo $a, \SplFileInfo $b):int => ((int) $a->getBasename() < (int) $b->getBasename()) ? -1 : 1);
+        \uasort($files, fn (\SplFileInfo $a, \SplFileInfo $b): int => ((int) $a->getBasename() < (int) $b->getBasename()) ? -1 : 1);
 
         $dstPath = \sprintf('%s/%s', \sys_get_temp_dir(), $this->getFilename());
         $dst = \fopen($dstPath, 'ab');

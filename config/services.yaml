@@ -30,3 +30,8 @@ services:
     class: App\Service\FileReceiver
     arguments:
       - ['@file_handler.video', '@file_handler.image']
+
+  App\Controller\DownloadController:
+    arguments:
+      - images: '@oneup_flysystem.image.filesystem_filesystem'
+        video: '@oneup_flysystem.video.filesystem_filesystem'
