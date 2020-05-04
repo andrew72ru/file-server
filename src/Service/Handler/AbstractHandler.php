@@ -11,6 +11,7 @@ use App\Service\Exception\InvalidCallException;
 use App\Service\FileChunk;
 use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Mime\MimeTypes;
 
 /**
  * AbstractHandler.
@@ -40,7 +41,7 @@ abstract class AbstractHandler implements HandlerInterface
         $file = $this->getFile();
 
         $dirName = $this->tempDirName();
-        if (!\is_dir($dirName) && !\mkdir($dirName) && !\is_dir($dirName)) {
+        if (!\is_dir($dirName) && (!\mkdir($dirName) && !\is_dir($dirName))) {
             throw new \RuntimeException(\sprintf('Directory "%s" was not created', $dirName));
         }
 
@@ -60,6 +61,9 @@ abstract class AbstractHandler implements HandlerInterface
         return true;
     }
 
+    /**
+     * Merge result file.
+     */
     protected function merge(): void
     {
         $this->validate();
@@ -87,6 +91,9 @@ abstract class AbstractHandler implements HandlerInterface
         \fclose($dstRead);
     }
 
+    /**
+     * @return string
+     */
     protected function tempDirName(): string
     {
         return \sprintf('%s/%s', \sys_get_temp_dir(), $this->chunk->getUniqueId());
@@ -133,8 +140,17 @@ abstract class AbstractHandler implements HandlerInterface
     protected function getFilename(): string
     {
         $this->validate();
+        $file = $this->getFile();
+        $mime = \method_exists($file, 'getClientMimeType')
+            ? $file->getClientMimeType() : $file->getMimeType();
 
-        return sprintf('%s.%s', $this->chunk->getUniqueId(), $this->getFile()->guessExtension() ?? $this->getFile()->getExtension());
+        $extension = 'bin';
+        $ex = MimeTypes::getDefault()->getExtensions($mime);
+        if (!empty($ex)) {
+            $extension = $ex[0];
+        }
+
+        return sprintf('%s.%s', $this->chunk->getUniqueId(), $extension);
     }
 
     /**
