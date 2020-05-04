@@ -1,10 +1,9 @@
 <?php
 /**
- * 02.05.2020
+ * 02.05.2020.
  */
 
 declare(strict_types=1);
-
 
 namespace App\Service;
 
@@ -23,6 +22,7 @@ class FileReceiver implements FileReceiverInterface
 
     /**
      * FileReceiver constructor.
+     *
      * @param HandlerInterface[] $fileHandlers
      */
     public function __construct(array $fileHandlers)
@@ -32,6 +32,7 @@ class FileReceiver implements FileReceiverInterface
 
     /**
      * @param string $name
+     *
      * @return HandlerInterface
      */
     public function getHandler(string $name): HandlerInterface

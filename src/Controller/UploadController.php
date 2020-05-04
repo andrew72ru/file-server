@@ -1,10 +1,9 @@
 <?php
 /**
- * 02.05.2020
+ * 02.05.2020.
  */
 
 declare(strict_types=1);
-
 
 namespace App\Controller;
 
@@ -19,7 +18,8 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * Upload Controller
+ * Upload Controller.
+ *
  * @Route(name="upload_file", path="/upload")
  */
 class UploadController extends AbstractController
@@ -36,6 +36,7 @@ class UploadController extends AbstractController
 
     /**
      * @param Request $request
+     *
      * @return JsonResponse
      */
     public function __invoke(Request $request): JsonResponse

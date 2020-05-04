@@ -1,10 +1,9 @@
 <?php
 /**
- * 02.05.2020
+ * 02.05.2020.
  */
 
 declare(strict_types=1);
-
 
 namespace App\Service\Handler;
 
@@ -29,5 +28,4 @@ final class ImageHandler extends AbstractHandler
     {
         return self::NAME;
     }
-
 }
