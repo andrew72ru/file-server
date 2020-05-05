@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload</title>
+</head>
+<body>
+<input type="file" id="f"/>
+<div id="percent"></div>
+<div id="filename"></div>
+
+<script type="text/javascript">
+  (() => {
+    const f = document.getElementById('f')
+    if (f.files.length > 0) process()
+
+    const process = async (e) => {
+      const uuid = `my-unique-file-name-${new Date().toISOString()}`
+      const f = e.target
+      const file = f.files[0]
+      const size = file.size
+      const chunkSize = 1024  * 160
+
+      const count = Math.ceil(size / chunkSize);
+      for (let i = 0; i < count; i++) {
+        let from = chunkSize * i;
+        let piece = file.slice(from, (from + chunkSize), file.type);
+
+        const fd = new FormData();
+        fd.append('upload', piece);
+        fd.append('_chunkSize', chunkSize + '');
+        fd.append('_currentChunkSize', piece.size);
+        fd.append('_chunkNumber', i + '');
+        fd.append('_totalSize', size + '');
+        fd.append('_uniqueId', uuid);
+        fd.append('type', 'video');
+
+        await window.fetch('https://127.0.0.1:8000/upload', {
+          method: 'POST',
+          body: fd,
+        }).then(r => r.json()).then((data) =>{
+          if (data.hasOwnProperty('done'))
+            document.getElementById('percent').innerText = `${data.done}%`;
+
+          if (data.hasOwnProperty('file') && data.file !== null)
+            document.getElementById('filename').innerText = data.file;
+        });
+      }
+    }
+
+    f.addEventListener('change', process, false)
+  })()
+</script>
+</body>
+</html>

@@ -9,9 +9,8 @@ namespace App\Tests\Download;
 
 use App\Controller\FileAccess\DownloadController;
 use App\Tests\KernelTestCase;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpFoundation\{Request, Response, StreamedResponse};
+use Symfony\Component\HttpKernel\Exception\{BadRequestHttpException, NotFoundHttpException};
 
 class FileDownloadTest extends KernelTestCase
 {
@@ -25,12 +24,30 @@ class FileDownloadTest extends KernelTestCase
 
         $controller = self::$container->get(DownloadController::class);
         /** @var Response $response */
-        $response = $controller('images', 'deserialization_tutorial6.pdf');
+        $response = $controller(Request::create('/download'), 'images', 'deserialization_tutorial6.pdf');
 
         $this->assertNotEmpty($response->headers->get('Content-Disposition'));
         $this->assertStringContainsString('attachment', $response->headers->get('Content-Disposition'));
         $this->assertStringContainsString('deserialization_tutorial6.pdf', $response->headers->get('Content-Disposition'));
         $this->assertEquals(\filesize($path), $response->headers->get('Content-Length'));
+    }
+
+    public function testDownloadImageFile(): void
+    {
+        self::bootKernel();
+
+        $path = $this->getDataDir('IMG_0144.jpg');
+        $imageFs = self::$container->get('oneup_flysystem.image.filesystem_filesystem');
+        $imageFs->put('IMG_0144.jpg', \file_get_contents($path));
+
+        $controller = self::$container->get(DownloadController::class);
+        /** @var StreamedResponse $response */
+        $response = $controller(Request::create('/download'), 'images', 'IMG_0144.jpg');
+
+        $this->assertInstanceOf(StreamedResponse::class, $response);
+        $this->assertEquals('image/jpeg', $response->headers->get('Content-Type'));
+        $this->assertNotEmpty($response->headers->get('Content-Range'));
+        $this->assertNotEmpty($response->headers->get('Accept-Ranges'));
     }
 
     public function testTryToDownloadWithWrongType(): void
@@ -39,7 +56,7 @@ class FileDownloadTest extends KernelTestCase
 
         self::bootKernel();
         $controller = self::$container->get(DownloadController::class);
-        $controller('not-registered-type', 'any-file');
+        $controller(Request::create('/download'), 'not-registered-type', 'any-file');
     }
 
     public function testTryToDownloadNotExistingFile(): void
@@ -47,6 +64,6 @@ class FileDownloadTest extends KernelTestCase
         $this->expectException(NotFoundHttpException::class);
         self::bootKernel();
         $controller = self::$container->get(DownloadController::class);
-        $controller('images', 'not-existing-file.pdf');
+        $controller(Request::create('/download'), 'images', 'not-existing-file.pdf');
     }
 }
