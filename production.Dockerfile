@@ -1,5 +1,5 @@
 ARG CI_REGISTRY_IMAGE
-FROM ${CI_REGISTRY_IMAGE}/composer:latest
+FROM ${CI_REGISTRY_IMAGE}/app/dev:latest
 
 RUN composer install \
     --prefer-dist \
