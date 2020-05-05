@@ -8,4 +8,5 @@ RUN composer install \
     --no-interaction \
     --no-ansi \
     --no-dev \
-    --no-scripts
+    --no-scripts && \
+    composer dump-env prod
