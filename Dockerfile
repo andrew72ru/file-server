@@ -9,7 +9,6 @@ RUN set -xe \
        libintl \
        icu \
        icu-dev \
-       bash \
        curl \
        libmcrypt \
        libmcrypt-dev \
@@ -34,15 +33,11 @@ RUN set -xe \
     && docker-php-ext-install -j$(nproc) \
         zip \
         gd \
-        intl \
-        soap \
         sockets \
         opcache \
         pcntl \
         sockets \
         exif \
-        pdo_pgsql \
-        pdo_mysql \
         iconv
 
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
@@ -58,12 +53,9 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
     --install-dir=/usr/local/bin \
     --filename=composer
 
-WORKDIR /var/www/app
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_MEMORY_LIMIT=-1
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
-
-WORKDIR /var/www/app
 
 ARG UID
 ARG GID
@@ -72,5 +64,8 @@ ENV TARGET_GID ${GID:-1000}
 
 RUN usermod -u ${TARGET_UID} www-data && groupmod -g ${TARGET_UID} www-data
 RUN mkdir -p /var/www/app && chown -R www-data:www-data /var/www/app
+WORKDIR /var/www/app
 
 USER ${TARGET_UID}:${TARGET_GID}
+
+COPY --chown=www-data:www-data . /var/www/app
