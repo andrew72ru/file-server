@@ -159,6 +159,57 @@ oneup_flysystem:
 
 Естественно, если вы переопределяете названия ФС, добавляете отдельные ФС и прочее, вам понадобится внести изменения также в файл `services.yaml`
 
+## Пример фронтенд-скрипта загрузки картинки
+
+```javascript
+(() => {
+    const f = document.getElementById('f')
+    if (f.files.length > 0) process()
+
+    const process = async (e) => {
+      const uuid = `my-unique-file-name-${new Date().toISOString()}`
+      const f = e.target
+      const file = f.files[0]
+      const size = file.size
+      const chunkSize = 1024 * 1024 // More than 1Mb
+
+      const count = Math.ceil(size / chunkSize);
+      for (let i = 0; i < count; i++) {
+        let from = chunkSize * i;
+        let piece = file.slice(from, (from + chunkSize), file.type);
+
+        const fd = new FormData();
+        // This is a required attributes! See App\Service\FileChunk
+        fd.append('upload', piece);                   // File part
+        fd.append('_chunkSize', chunkSize + '');      // Common size of chunk
+        fd.append('_currentChunkSize', piece.size);   // Current chunk size
+        fd.append('_chunkNumber', i + '');            // Chunk number
+        fd.append('_totalSize', size + '');           // Total file size
+        fd.append('_uniqueId', uuid);                 // Unique name for file. Be careful — only ASCII symbols, if file with this name (and type) exists, it will be override
+        fd.append('type', 'video');                   // Type of service. Must be the same as App\Service\Handler\HandlerInterface::getName() method result
+
+        await window.fetch('https://127.0.0.1:8000/upload', {
+          method: 'POST',
+          body: fd,
+        }).then(r => r.json()).then((data) =>{
+        /**
+         * Response is JSON
+         * { done: 14, file: filename.ext }
+         * 'done' property contains percents from start, and 'file' contains null or full file path (on upload complete)
+         **/
+          if (data.hasOwnProperty('done'))
+            document.getElementById('percent').innerText = `${data.done}%`; // Feel free to show progress bar or something else
+
+          if (data.hasOwnProperty('file') && data.file !== null)
+            document.getElementById('filename').innerText = data.file;
+        });
+      }
+    }
+
+    f.addEventListener('change', process, false)
+  })()
+```
+
 ## Дополнения
 
 Как обычно, можно свободно забирать, распространять, дарить, продавать и делать, что хочешь с этим кодом. Пулл-реквесты **приветствуются**, в том числе для **тестов контроллера стриминга** `App\Controller\FileAccess\DownloadController`.
