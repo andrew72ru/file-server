@@ -83,6 +83,8 @@ class ControllerTest extends KernelTestCase
         $controller = self::$container->get(UploadController::class);
         $uuid = \uuid_create();
         $fs = self::$container->get('oneup_flysystem.image.filesystem_filesystem');
+        $handler = self::$container->get('file_handler.image');
+        $handler->setUrlPrefix('https://google.com/images/');
 
         foreach (\range(0, ($this->count - 1)) as $item) {
             $request = $this->request($uuid, $item);
@@ -92,6 +94,7 @@ class ControllerTest extends KernelTestCase
 
             if (($content['file'] ?? null) !== null) {
                 $this->assertTrue($fs->has($content['file']));
+                $this->assertEquals($content['url'], \sprintf('https://google.com/images/%s', $content['file']));
 
                 $file = $fs->read($content['file']);
                 $origin = \file_get_contents($this->getDataDir('deserialization_tutorial6.pdf'));

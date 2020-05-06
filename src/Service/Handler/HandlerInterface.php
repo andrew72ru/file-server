@@ -42,4 +42,15 @@ interface HandlerInterface
      * @return string|null
      */
     public function getFullFile(): ?string;
+
+    /**
+     * @return string|null
+     */
+    public function getFileUrl(): ?string;
+
+    /**
+     * @param string|null $prefix
+     * @return $this
+     */
+    public function setUrlPrefix(string $prefix = null): self;
 }

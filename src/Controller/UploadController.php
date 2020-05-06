@@ -56,6 +56,7 @@ class UploadController extends AbstractController
         return new JsonResponse([
             'done' => $handler->getPercents(),
             'file' => $handler->getFullFile(),
+            'url' => $handler->getFileUrl(),
         ]);
     }
 }

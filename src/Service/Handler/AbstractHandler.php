@@ -21,6 +21,17 @@ abstract class AbstractHandler implements HandlerInterface
 {
     protected ?FileChunk $chunk = null;
     protected Filesystem $filesystem;
+    protected ?string $urlPrefix = null;
+
+    /**
+     * @inheritDoc
+     */
+    public function setUrlPrefix(string $prefix = null): HandlerInterface
+    {
+        $this->urlPrefix = $prefix;
+
+        return $this;
+    }
 
     /**
      * @inheritDoc
@@ -127,6 +138,22 @@ abstract class AbstractHandler implements HandlerInterface
     {
         if ($this->isFinished()) {
             return $this->getFilename();
+        }
+
+        return null;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getFileUrl(): ?string
+    {
+        if (($filename = $this->getFullFile()) === null) {
+            return null;
+        }
+
+        if ($this->urlPrefix !== null) {
+            return \sprintf('%s/%s', rtrim($this->urlPrefix, '/'), $filename);
         }
 
         return null;
