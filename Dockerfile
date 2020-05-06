@@ -63,9 +63,10 @@ ENV TARGET_UID ${UID:-1000}
 ENV TARGET_GID ${GID:-1000}
 
 RUN usermod -u ${TARGET_UID} www-data && groupmod -g ${TARGET_UID} www-data
-RUN mkdir -p /var/www/app && chown -R www-data:www-data /var/www/app
 WORKDIR /var/www/app
 
-USER ${TARGET_UID}:${TARGET_GID}
-
+RUN mkdir -p /var/www/app/var/cache/prod/images && mkdir -p /var/www/app/var/cache/prod/video && \
+    chown -R www-data:www-data /var/www/app
 COPY --chown=www-data:www-data . /var/www/app
+
+USER ${TARGET_UID}:${TARGET_GID}

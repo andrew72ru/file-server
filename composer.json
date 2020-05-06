@@ -6,6 +6,7 @@
     "ext-ctype": "*",
     "ext-iconv": "*",
     "ext-json": "*",
+    "doctrine/annotations": "^1.10",
     "nelmio/cors-bundle": "^2.0",
     "oneup/flysystem-bundle": "^3.4",
     "symfony/console": "5.0.*",
