@@ -212,4 +212,11 @@ oneup_flysystem:
 
 ## Дополнения
 
+### Команды для сборки образов локально
+
+```shell script
+docker build -t git.crtweb.ru:4567/rostelecom/files-service/app/dev:latest -f Dockerfile .
+docker build --build-arg CI_REGISTRY_IMAGE='git.crtweb.ru:4567/rostelecom/files-service' -t git.crtweb.ru:4567/rostelecom/files-service/app/prod:latest -f production.Dockerfile .
+```
+
 Как обычно, можно свободно забирать, распространять, дарить, продавать и делать, что хочешь с этим кодом. Пулл-реквесты **приветствуются**, в том числе для **тестов контроллера стриминга** `App\Controller\FileAccess\DownloadController`.
