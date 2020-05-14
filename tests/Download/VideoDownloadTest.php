@@ -1,13 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
- * 14.05.2020
+ * 14.05.2020.
  */
 
 namespace App\Tests\Download;
 
 use App\Controller\FileAccess\DownloadController;
 use App\Tests\KernelTestCase;
-use ReflectionObject;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -68,7 +69,7 @@ class VideoDownloadTest extends KernelTestCase
         $this->expectException(\RuntimeException::class);
 
         $controller = self::$container->get(DownloadController::class);
-        $makeVideoStream = (new ReflectionObject($controller))->getMethod('makeVideoStream');
+        $makeVideoStream = (new \ReflectionObject($controller))->getMethod('makeVideoStream');
         $makeVideoStream->setAccessible(true);
 
         $request = Request::create('/download', 'GET', [], [], [], ['HTTP_RANGE' => 'bytes=0-']);
@@ -80,7 +81,7 @@ class VideoDownloadTest extends KernelTestCase
     public function testRangeNotSatisfiableInMakeVideoStream(): void
     {
         $controller = self::$container->get(DownloadController::class);
-        $makeVideoStream = (new ReflectionObject($controller))->getMethod('makeVideoStream');
+        $makeVideoStream = (new \ReflectionObject($controller))->getMethod('makeVideoStream');
         $makeVideoStream->setAccessible(true);
         $request = Request::create('/download', 'GET', [], [], [], ['HTTP_RANGE' => 'bytes=0,3145728']);
         $response = new StreamedResponse();
@@ -92,7 +93,7 @@ class VideoDownloadTest extends KernelTestCase
     public function testWrongRangeRequestedInMakeVideoStream(): void
     {
         $controller = self::$container->get(DownloadController::class);
-        $makeVideoStream = (new ReflectionObject($controller))->getMethod('makeVideoStream');
+        $makeVideoStream = (new \ReflectionObject($controller))->getMethod('makeVideoStream');
         $makeVideoStream->setAccessible(true);
         $request = Request::create('/download', 'GET', [], [], [], ['HTTP_RANGE' => 'bytes=3145728-10']);
         $response = new StreamedResponse();
@@ -107,7 +108,7 @@ class VideoDownloadTest extends KernelTestCase
         $this->expectOutputString(\file_get_contents($image));
 
         $controller = self::$container->get(DownloadController::class);
-        $makeStream = (new ReflectionObject($controller))->getMethod('makeStream');
+        $makeStream = (new \ReflectionObject($controller))->getMethod('makeStream');
         $makeStream->setAccessible(true);
 
         $makeStream->invokeArgs($controller, [\fopen($image, 'rb'), 0, \filesize($image)]);

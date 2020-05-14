@@ -50,6 +50,7 @@ interface HandlerInterface
 
     /**
      * @param string|null $prefix
+     *
      * @return $this
      */
     public function setUrlPrefix(string $prefix = null): self;

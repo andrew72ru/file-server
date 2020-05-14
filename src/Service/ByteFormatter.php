@@ -20,6 +20,6 @@ class ByteFormatter
         $suffixKey = \floor($base);
         $suffix = $suffixes[$suffixKey] ?? '';
 
-        return \sprintf("%s%s", \round(1024 ** ($base - \floor($base)), $precision), $suffix);
+        return \sprintf('%s%s', \round(1024 ** ($base - \floor($base)), $precision), $suffix);
     }
 }
