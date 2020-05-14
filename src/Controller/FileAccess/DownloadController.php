@@ -78,7 +78,7 @@ class DownloadController extends AbstractFileAccessController
     /**
      * @param Request          $request
      * @param int              $size
-     * @param resource         $resource
+     * @param mixed            $resource
      * @param StreamedResponse $response
      *
      * @return Response
@@ -90,14 +90,16 @@ class DownloadController extends AbstractFileAccessController
         ]);
 
         if (!\is_resource($resource)) {
-            throw new \RuntimeException('Action %s needs a resource as first argument, %s given', __METHOD__, (\is_object($resource) ? \get_class($resource) : \gettype($resource)));
+            $message = \sprintf('Action %s needs a resource as first argument, %s given', __METHOD__, (\is_object($resource) ? \get_class($resource) : \gettype($resource)));
+            throw new \RuntimeException($message);
         }
 
         $start = 0;
         $end = $size - 1;
         $this->setCommonHeaders($response, $start, $end, $size);
 
-        if (($rangeHeader = $request->server->get('HTTP_RANGE', null)) !== null) {
+        $rangeHeader = $request->server->get('HTTP_RANGE', null) ?? $request->headers->get('Http-Range', null);
+        if ($rangeHeader !== null) {
             $cEnd = $end;
 
             [, $range] = \explode('=', $rangeHeader, 2);

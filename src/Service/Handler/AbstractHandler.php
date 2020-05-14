@@ -59,6 +59,9 @@ abstract class AbstractHandler implements HandlerInterface
         $destName = \sprintf('%s/%s', $dirName, $this->chunk->getNumber());
         $dst = \fopen($destName, 'ab');
         $inc = \fopen($file->getRealPath(), 'rb');
+        if (!\is_file($file->getRealPath()))
+            throw new \RuntimeException(\sprintf('File %s not a file', $file->getRealPath()));
+
         while ($b = \fread($inc, 4096)) {
             \fwrite($dst, $b);
         }
