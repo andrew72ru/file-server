@@ -52,7 +52,7 @@ class DownloadController extends AbstractFileAccessController
         }
 
         $response = new StreamedResponse();
-        $response->headers->set('Content-Length', $fileSize);
+        $response->headers->set('Content-Length', (string) $fileSize);
 
         if (\strpos($mimeType, 'video') === 0) {
             $response->headers->set('Content-type', $mimeType);
@@ -120,7 +120,7 @@ class DownloadController extends AbstractFileAccessController
             $start = $cStart;
             $end = $cEnd;
             $response->setStatusCode(Response::HTTP_PARTIAL_CONTENT);
-            $response->headers->set('Content-Length', $end - $start + 1);
+            $response->headers->set('Content-Length', (string) ($end - $start + 1));
             $response->headers->set('Content-Range', \sprintf('bytes %s-%s/%s', $start, $end, $size));
         }
 
@@ -232,6 +232,6 @@ class DownloadController extends AbstractFileAccessController
         $response->headers->set('Expires', \date_create()->add(\date_interval_create_from_date_string('+30 days'))->format('D, d M Y H:i:s'));
         $response->headers->set('Accept-Ranges', \sprintf('bytes 0-%d', $size));
         $response->headers->set('Content-Range', \sprintf('bytes %d-%d/%d', $start, $end, $size));
-        $response->headers->set('Content-Length', $size);
+        $response->headers->set('Content-Length', (string) $size);
     }
 }

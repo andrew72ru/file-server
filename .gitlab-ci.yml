@@ -34,6 +34,7 @@ test:
     - composer install --prefer-dist --optimize-autoloader --classmap-authoritative --no-interaction --no-ansi
   script:
     - bin/phpunit --testdox --coverage-text --colors=never
+    - vendor/bin/psalm --show-info=false --long-progress --stats
 
 build_prod:
   stage: build_prod

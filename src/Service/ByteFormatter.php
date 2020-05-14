@@ -17,7 +17,9 @@ class ByteFormatter
 
         $base = \log($size, 1024);
         $suffixes = ['', 'K', 'M', 'G', 'T'];
+        $suffixKey = \floor($base);
+        $suffix = $suffixes[$suffixKey] ?? '';
 
-        return \round(1024 ** ($base - \floor($base)), $precision) . $suffixes[\floor($base)];
+        return \sprintf("%s%s", \round(1024 ** ($base - \floor($base)), $precision), $suffix);
     }
 }
