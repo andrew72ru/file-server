@@ -8,8 +8,10 @@ namespace App\Tests\Remove;
 use App\Controller\FileAccess\DeleteController;
 use App\Tests\KernelTestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RemoveFileTest extends KernelTestCase
@@ -38,6 +40,8 @@ class RemoveFileTest extends KernelTestCase
         $this->fs->put($this->filename, \file_get_contents($this->path));
         $controller = self::$container->get(DeleteController::class);
         $request = Request::create('/del', 'DELETE');
+        $request->headers->set(DeleteController::SECURITY_HEADER, $_ENV['SECURITY_HEADER_SECRET']);
+
         /** @var Response $response */
         $response = $controller($request, 'images', $this->filename);
 
@@ -51,8 +55,33 @@ class RemoveFileTest extends KernelTestCase
 
         $controller = self::$container->get(DeleteController::class);
         $request = Request::create('/del', 'DELETE');
+        $request->headers->set(DeleteController::SECURITY_HEADER, $_ENV['SECURITY_HEADER_SECRET']);
+
         /* @var Response $response */
         $controller($request, 'images', $this->filename);
         $this->assertStringContainsString('not found', $this->getExpectedExceptionMessage());
+    }
+
+    public function testAccessDeniedWithNoHeader(): void
+    {
+        $this->expectException(AccessDeniedHttpException::class);
+
+        $controller = self::$container->get(DeleteController::class);
+        $request = Request::create('/del', 'DELETE');
+        $controller($request, 'images', $this->filename);
+
+        $this->assertStringContainsString('No security header provided', $this->getExpectedExceptionMessage());
+    }
+
+    public function testAccessDeniedOnWrongToken(): void
+    {
+        $this->expectException(AccessDeniedHttpException::class);
+
+        $controller = self::$container->get(DeleteController::class);
+        $request = Request::create('/del', 'DELETE');
+        $request->headers->set(DeleteController::SECURITY_HEADER, 'not-valid-header');
+        $controller($request, 'images', $this->filename);
+
+        $this->assertStringContainsString('Wrong security header', $this->getExpectedExceptionMessage());
     }
 }

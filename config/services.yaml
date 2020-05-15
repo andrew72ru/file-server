@@ -2,6 +2,7 @@
 parameters:
   images_url_prefix: '%env(IMAGES_URL_PREFIX)%'
   video_url_prefix: '%env(VIDEO_URL_PREFIX)%'
+  security_header_secret: '%env(SECURITY_HEADER_SECRET)%'
 
 services:
   _defaults:
