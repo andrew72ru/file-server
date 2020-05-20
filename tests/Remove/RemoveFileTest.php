@@ -40,7 +40,7 @@ class RemoveFileTest extends KernelTestCase
         $this->fs->put($this->filename, \file_get_contents($this->path));
         $controller = self::$container->get(DeleteController::class);
         $request = Request::create('/del', 'DELETE');
-        $request->headers->set(DeleteController::SECURITY_HEADER, $_ENV['SECURITY_HEADER_SECRET']);
+        $request->headers->set(DeleteController::SECURITY_HEADER, ($_ENV['SECURITY_HEADER_SECRET'] ?? $_SERVER['SECURITY_HEADER_SECRET']));
 
         /** @var Response $response */
         $response = $controller($request, 'images', $this->filename);
@@ -55,7 +55,7 @@ class RemoveFileTest extends KernelTestCase
 
         $controller = self::$container->get(DeleteController::class);
         $request = Request::create('/del', 'DELETE');
-        $request->headers->set(DeleteController::SECURITY_HEADER, $_ENV['SECURITY_HEADER_SECRET']);
+        $request->headers->set(DeleteController::SECURITY_HEADER, ($_ENV['SECURITY_HEADER_SECRET'] ?? $_SERVER['SECURITY_HEADER_SECRET']));
 
         /* @var Response $response */
         $controller($request, 'images', $this->filename);
