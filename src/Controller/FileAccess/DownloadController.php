@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Download as file.
  *
- * @Route(name="download_file", path="/download/{type}/{filename}")
+ * @Route(name="download_file", path="/download/{type}/{filename}", requirements={"filename"=".+"})
  */
 class DownloadController extends AbstractFileAccessController
 {
