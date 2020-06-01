@@ -22,6 +22,8 @@ use Symfony\Component\Routing\Annotation\Route;
 class DownloadController extends AbstractFileAccessController
 {
     protected const BUFFER_SIZE = 1024 * 86;
+    protected const VIDEO_DEMO_NAME = 'video-demo-74df86.mp4';
+    protected const IMAGE_DEMO_NAME = 'image-demo-775fdA.jpg';
 
     private LoggerInterface $logger;
 
@@ -41,8 +43,17 @@ class DownloadController extends AbstractFileAccessController
     public function __invoke(Request $request, string $type, string $filename): Response
     {
         $this->logger->info(\sprintf('Try to download %s from %s type', $filename, $type));
-
         $fs = $this->getFs($type);
+
+        if (\strpos($filename, self::IMAGE_DEMO_NAME) === 0 || \strpos($filename, self::VIDEO_DEMO_NAME) === 0) {
+            $path = \sprintf('%s/config/demo/%s', $this->getParameter('kernel.project_dir'), $filename);
+            $fileStream = \fopen($path, 'rb');
+            $fileSize = \filesize($path);
+            $mimeType = \strpos($filename, self::IMAGE_DEMO_NAME) === 0 ? 'image/jpeg' : 'video/mp4';
+
+            return $this->makeResponse($request, $fileStream, $fileSize, $mimeType, $filename);
+        }
+
         try {
             $fileStream = $fs->readStream($filename);
             $fileSize = $fs->getSize($filename);
@@ -51,6 +62,20 @@ class DownloadController extends AbstractFileAccessController
             throw new NotFoundHttpException(\sprintf('File \'%s\' not found', $filename));
         }
 
+        return $this->makeResponse($request, $fileStream, $fileSize, $mimeType, $filename);
+    }
+
+    /**
+     * @param Request  $request
+     * @param resource $fileStream
+     * @param int      $fileSize
+     * @param string   $mimeType
+     * @param string   $filename
+     *
+     * @return Response
+     */
+    protected function makeResponse(Request $request, $fileStream, int $fileSize, string $mimeType, string $filename): Response
+    {
         $response = new StreamedResponse();
         $response->headers->set('Content-Length', (string) $fileSize);
 
