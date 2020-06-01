@@ -50,5 +50,5 @@ build_prod:
     - echo '192.168.88.240    git.crtweb.ru' >> /etc/hosts
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" $CI_REGISTRY --password-stdin
   script:
-    - docker build --build-arg CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE} -t $CI_REGISTRY_IMAGE/app/prod:latest -f production.Dockerfile .
+    - docker build --build-arg CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}/app/dev -t $CI_REGISTRY_IMAGE/app/prod:latest -f production.Dockerfile .
     - docker push $CI_REGISTRY_IMAGE/app/prod:latest
