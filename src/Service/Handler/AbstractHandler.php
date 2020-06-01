@@ -100,9 +100,22 @@ abstract class AbstractHandler implements HandlerInterface
         \fclose($dst);
 
         $dstRead = \fopen($dstPath, 'rb');
-        $this->filesystem->putStream($this->getFilename(), $dstRead);
+        $targetName = \sprintf('%s/%s', \rtrim(($this->getTargetPath() ?? ''), '/'), $this->getFilename());
+        $this->filesystem->putStream($targetName, $dstRead);
 
         \fclose($dstRead);
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function getTargetPath(): ?string
+    {
+        if ($this->chunk === null) {
+            return null;
+        }
+
+        return $this->chunk->getTargetPath();
     }
 
     /**

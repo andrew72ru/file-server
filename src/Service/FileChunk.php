@@ -22,12 +22,14 @@ final class FileChunk implements FileChunkInterface
     public const CHUNK_NUMBER = '_chunkNumber';
     public const TOTAL_SIZE = '_totalSize';
     public const UNIQUE_ID = '_uniqueId';
+    public const TARGET_PATH = '_targetPath';
 
     private int $size;
     private int $currentSize;
     private int $number;
     private int $totalSize;
     private string $uniqueId;
+    private ?string $targetPath = null;
     private File $file;
 
     /**
@@ -53,7 +55,7 @@ final class FileChunk implements FileChunkInterface
             }
         }
 
-        return new self(
+        $result = new self(
             (int) $request->get(self::CHUNK_SIZE),
             (int) $request->get(self::CURRENT_CHUNK_SIZE),
             (int) $request->get(self::CHUNK_NUMBER),
@@ -61,6 +63,11 @@ final class FileChunk implements FileChunkInterface
             (string) $request->get(self::UNIQUE_ID),
             $file,
         );
+        if (($tp = $request->get(self::TARGET_PATH, null)) !== null) {
+            $result->setTargetPath($tp);
+        }
+
+        return $result;
     }
 
     /**
@@ -81,6 +88,18 @@ final class FileChunk implements FileChunkInterface
         $this->totalSize = $totalSize;
         $this->uniqueId = $uniqueId;
         $this->file = $file;
+    }
+
+    public function setTargetPath(?string $targetPath): self
+    {
+        $this->targetPath = $targetPath;
+
+        return $this;
+    }
+
+    public function getTargetPath(): ?string
+    {
+        return $this->targetPath;
     }
 
     /**
