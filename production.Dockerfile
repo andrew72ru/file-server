@@ -1,5 +1,5 @@
 ARG CI_REGISTRY_IMAGE
-FROM ${CI_REGISTRY_IMAGE}/app/dev:latest
+FROM ${CI_REGISTRY_IMAGE:-git.crtweb.ru:4567/rostelecom/files-service/app/dev}:latest
 
 RUN composer install \
     --prefer-dist \
