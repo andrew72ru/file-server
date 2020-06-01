@@ -10,6 +10,7 @@ namespace App\Service\Handler;
 use App\Service\Exception\InvalidCallException;
 use App\Service\FileChunk;
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemInterface;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Mime\MimeTypes;
 
@@ -214,5 +215,13 @@ abstract class AbstractHandler implements HandlerInterface
         if ($this->chunk === null) {
             throw new InvalidCallException(\sprintf('You must set \'%s\' instance to handler first', FileChunk::class));
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFilesystem(): FilesystemInterface
+    {
+        return $this->filesystem;
     }
 }
