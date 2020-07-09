@@ -19,6 +19,7 @@
     "symfony/yaml": "5.0.*"
   },
   "require-dev": {
+    "ext-curl": "*",
     "friendsofphp/php-cs-fixer": "^2.16",
     "league/flysystem-memory": "^1.0",
     "symfony/debug-pack": "^1.0",

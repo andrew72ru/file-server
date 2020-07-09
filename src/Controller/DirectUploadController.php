@@ -45,6 +45,10 @@ class DirectUploadController extends AbstractController
         if (!$file instanceof UploadedFile) {
             throw new BadRequestHttpException(\sprintf('Upload request must contains file in \'%s\' field', UploadController::UPLOADED_FIELD));
         }
+        if (!$file->isValid()) {
+            throw new BadRequestHttpException($file->getErrorMessage());
+        }
+
         $handlerName = $request->get(UploadController::HANDLER_NAME_FIELD);
         if ($handlerName === null) {
             throw new BadRequestHttpException(\sprintf('You should declare the handler name in request \'%s\' field', UploadController::HANDLER_NAME_FIELD));
