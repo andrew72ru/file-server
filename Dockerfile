@@ -56,6 +56,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_MEMORY_LIMIT=-1
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
+ENV APP_ENV=prod
+ENV APP_DEBUG=false
 
 ARG UID
 ARG GID
