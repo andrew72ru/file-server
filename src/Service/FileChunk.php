@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use Behat\Transliterator\Transliterator;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -64,7 +65,8 @@ final class FileChunk implements FileChunkInterface
             $file,
         );
         if (($tp = $request->get(self::TARGET_PATH, null)) !== null) {
-            $result->setTargetPath($tp);
+            $host = Transliterator::urlize($request->getHost());
+            $result->setTargetPath(sprintf('%s/%s', $host, $tp));
         }
 
         return $result;

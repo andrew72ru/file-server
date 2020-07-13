@@ -8,6 +8,7 @@ namespace App\Controller;
 use App\Service\Exception\HandlerNotFoundException;
 use App\Service\FileReceiverInterface;
 use App\Service\Handler\ImageHandler;
+use Behat\Transliterator\Transliterator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,7 +60,10 @@ class DirectUploadController extends AbstractController
             throw new BadRequestHttpException($e->getMessage());
         }
 
-        $targetName = \vsprintf('%s/%s.%s', [
+        $host = Transliterator::urlize($request->getHost());
+
+        $targetName = \vsprintf('%s/%s/%s.%s', [
+            $host,
             \rtrim(($request->get(self::TARGET_PATH_PARAM, null) ?? ''), '/'),
             \uuid_create(),
             $file->guessExtension(),
