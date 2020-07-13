@@ -1,4 +1,7 @@
 {
+    "behat/transliterator": {
+        "version": "v1.3.0"
+    },
     "league/flysystem": {
         "version": "1.0.67"
     },
