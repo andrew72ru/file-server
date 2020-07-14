@@ -7,10 +7,10 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use Behat\Transliterator\Transliterator;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * File Chunk representation.
@@ -65,7 +65,10 @@ final class FileChunk implements FileChunkInterface
             $file,
         );
         if (($tp = $request->get(self::TARGET_PATH, null)) !== null) {
-            $host = Transliterator::urlize($request->getHost());
+            $slugger = new AsciiSlugger();
+            $host = strtolower(
+                $slugger->slug($request->getHost())
+            );
             $result->setTargetPath(sprintf('%s/%s', $host, $tp));
         }
 
