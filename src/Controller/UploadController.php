@@ -9,6 +9,7 @@ namespace App\Controller;
 
 use App\Service\{Exception\HandlerNotFoundException, FileChunk, FileReceiverInterface};
 use League\Flysystem\FileNotFoundException;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{File\UploadedFile, JsonResponse, Request};
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -33,11 +34,12 @@ class UploadController extends AbstractController
     }
 
     /**
-     * @param Request $request
+     * @param Request         $request
+     * @param LoggerInterface $logger
      *
      * @return JsonResponse
      */
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, LoggerInterface $logger): JsonResponse
     {
         $file = $request->files->get(self::UPLOADED_FIELD);
         if (!$file instanceof UploadedFile) {
@@ -58,7 +60,7 @@ class UploadController extends AbstractController
             $tempFile = \uuid_create();
 
             if (
-                $filesystem->put($tempFile, 'Test file. Should be deleted.') &&
+                $filesystem->put($tempFile, 'Test file. Should be deleted.') === false &&
                 !$filesystem->has($tempFile)
             ) {
                 throw new HttpException(523, 'Unable to store file');
@@ -66,7 +68,9 @@ class UploadController extends AbstractController
             try {
                 $filesystem->delete($tempFile);
             } catch (FileNotFoundException $e) {
-                throw new HttpException(523, 'Unable to delete temporary file');
+                $logger->error('Unable to delete temporary file', [
+                    'file' => $tempFile
+                ]);
             }
         }
         $handler->setChunk($fileChunk)->storeChunk();
