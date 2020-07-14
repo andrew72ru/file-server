@@ -69,7 +69,7 @@ class UploadController extends AbstractController
                 $filesystem->delete($tempFile);
             } catch (FileNotFoundException $e) {
                 $logger->error('Unable to delete temporary file', [
-                    'file' => $tempFile
+                    'file' => $tempFile,
                 ]);
             }
         }

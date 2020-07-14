@@ -67,7 +67,7 @@ final class FileChunk implements FileChunkInterface
         if (($tp = $request->get(self::TARGET_PATH, null)) !== null) {
             $slugger = new AsciiSlugger();
             $host = strtolower(
-                $slugger->slug($request->getHost())
+                (string) $slugger->slug($request->getHost())
             );
             $result->setTargetPath(sprintf('%s/%s', $host, $tp));
         }
