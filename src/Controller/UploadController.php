@@ -9,6 +9,7 @@ namespace App\Controller;
 
 use App\Service\{Exception\HandlerNotFoundException, FileChunk, FileReceiverInterface};
 use League\Flysystem\FileNotFoundException;
+use League\Flysystem\FilesystemInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{File\UploadedFile, JsonResponse, Request};
@@ -34,6 +35,28 @@ class UploadController extends AbstractController
     }
 
     /**
+     * @param FilesystemInterface $filesystem
+     * @param LoggerInterface     $logger
+     */
+    private function checkIfWritable(FilesystemInterface $filesystem, LoggerInterface $logger): void
+    {
+        $tempFile = \uuid_create();
+        if (
+            $filesystem->put($tempFile, 'Test file. Should be deleted.') === false &&
+            !$filesystem->has($tempFile)
+        ) {
+            throw new HttpException(523, 'Unable to store file');
+        }
+        try {
+            $filesystem->delete($tempFile);
+        } catch (FileNotFoundException $e) {
+            $logger->error('Unable to delete temporary file', [
+                'file' => $tempFile,
+            ]);
+        }
+    }
+
+    /**
      * @param Request         $request
      * @param LoggerInterface $logger
      *
@@ -56,22 +79,7 @@ class UploadController extends AbstractController
         }
         $fileChunk = FileChunk::create($request, $file);
         if ($fileChunk->getNumber() === 0) {
-            $filesystem = $handler->getFilesystem();
-            $tempFile = \uuid_create();
-
-            if (
-                $filesystem->put($tempFile, 'Test file. Should be deleted.') === false &&
-                !$filesystem->has($tempFile)
-            ) {
-                throw new HttpException(523, 'Unable to store file');
-            }
-            try {
-                $filesystem->delete($tempFile);
-            } catch (FileNotFoundException $e) {
-                $logger->error('Unable to delete temporary file', [
-                    'file' => $tempFile,
-                ]);
-            }
+            $this->checkIfWritable($handler->getFilesystem(), $logger);
         }
         $handler->setChunk($fileChunk)->storeChunk();
 

@@ -9,14 +9,12 @@ namespace App\Tests\Store;
 
 use App\Controller\UploadController;
 use App\Service\FileChunk;
-use App\Service\FileReceiver;
-use App\Service\Handler\ImageHandler;
+use App\Service\FileReceiverInterface;
+use App\Service\Handler\HandlerInterface;
 use App\Tests\KernelTestCase;
 use League\Flysystem\Filesystem;
-use PHPUnit\Framework\MockObject\MockBuilder;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -86,7 +84,9 @@ class ControllerTest extends KernelTestCase
     public function testChunkUpload(): void
     {
         self::bootKernel();
+        /** @var UploadController $controller */
         $controller = self::$container->get(UploadController::class);
+        /** @var LoggerInterface $logger */
         $logger = self::$container->get(LoggerInterface::class);
         $uuid = \uuid_create();
         $fs = self::$container->get('oneup_flysystem.image.filesystem_filesystem');
@@ -95,7 +95,6 @@ class ControllerTest extends KernelTestCase
 
         foreach (\range(0, ($this->count - 1)) as $item) {
             $request = $this->request($uuid, $item);
-            /** @var JsonResponse $response */
             $response = $controller($request, $logger);
             $content = \json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
@@ -115,7 +114,9 @@ class ControllerTest extends KernelTestCase
         $this->expectException(BadRequestHttpException::class);
 
         self::bootKernel();
+        /** @var UploadController $controller */
         $controller = self::$container->get(UploadController::class);
+        /** @var LoggerInterface $logger */
         $logger = self::$container->get(LoggerInterface::class);
 
         $request = Request::create('/upload');
@@ -127,7 +128,9 @@ class ControllerTest extends KernelTestCase
         $this->expectException(BadRequestHttpException::class);
 
         self::bootKernel();
+        /** @var UploadController $controller */
         $controller = self::$container->get(UploadController::class);
+        /** @var LoggerInterface $logger */
         $logger = self::$container->get(LoggerInterface::class);
 
         $request = Request::create('/upload');
@@ -141,7 +144,9 @@ class ControllerTest extends KernelTestCase
         $this->expectException(BadRequestHttpException::class);
 
         self::bootKernel();
+        /** @var UploadController $controller */
         $controller = self::$container->get(UploadController::class);
+        /** @var LoggerInterface $logger */
         $logger = self::$container->get(LoggerInterface::class);
         $request = Request::create('/upload');
         $request->files->set(UploadController::UPLOADED_FIELD, new UploadedFile($this->getDataDir('deserialization_tutorial6.pdf'), 'deserialization_tutorial6.pdf', null, null, true));
@@ -153,13 +158,21 @@ class ControllerTest extends KernelTestCase
     public function testNotAvailableToWrite(): void
     {
         self::bootKernel();
-
         $filesystem = $this->createMock(Filesystem::class);
         $filesystem->method('put')->willReturn(false);
 
-        $imageHandler = new ImageHandler($filesystem);
-        $fileReceiver = new FileReceiver([$imageHandler]);
-        $controller = new UploadController($fileReceiver);
+        $handler = $this->createMock(HandlerInterface::class);
+        $handler->method('getFilesystem')->willReturn($filesystem);
+
+        $receiver = $this->getMockBuilder(FileReceiverInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $receiver->expects(self::once())
+            ->method('getHandler')
+            ->willReturn($handler);
+
+        /** @var FileReceiverInterface $receiver */
+        $controller = new UploadController($receiver);
         /** @var LoggerInterface $logger */
         $logger = self::$container->get(LoggerInterface::class);
         $uuid = \uuid_create();
@@ -167,5 +180,7 @@ class ControllerTest extends KernelTestCase
 
         $this->expectException(HttpException::class);
         $controller($request, $logger);
+
+        $this->expectExceptionMessageMatches('Unable to store file');
     }
 }
