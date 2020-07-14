@@ -62,7 +62,7 @@ class DirectUploadController extends AbstractController
 
         $slugger = new AsciiSlugger();
         $host = strtolower(
-            $slugger->slug($request->getHost())
+            (string) $slugger->slug($request->getHost())
         );
 
         $targetName = \vsprintf('%s/%s/%s.%s', [

@@ -8,9 +8,13 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\{Exception\HandlerNotFoundException, FileChunk, FileReceiverInterface};
+use League\Flysystem\FileNotFoundException;
+use League\Flysystem\FilesystemInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{File\UploadedFile, JsonResponse, Request};
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -31,11 +35,34 @@ class UploadController extends AbstractController
     }
 
     /**
-     * @param Request $request
+     * @param FilesystemInterface $filesystem
+     * @param LoggerInterface     $logger
+     */
+    private function checkIfWritable(FilesystemInterface $filesystem, LoggerInterface $logger): void
+    {
+        $tempFile = \uuid_create();
+        if (
+            $filesystem->put($tempFile, 'Test file. Should be deleted.') === false &&
+            !$filesystem->has($tempFile)
+        ) {
+            throw new HttpException(523, 'Unable to store file');
+        }
+        try {
+            $filesystem->delete($tempFile);
+        } catch (FileNotFoundException $e) {
+            $logger->error('Unable to delete temporary file', [
+                'file' => $tempFile,
+            ]);
+        }
+    }
+
+    /**
+     * @param Request         $request
+     * @param LoggerInterface $logger
      *
      * @return JsonResponse
      */
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, LoggerInterface $logger): JsonResponse
     {
         $file = $request->files->get(self::UPLOADED_FIELD);
         if (!$file instanceof UploadedFile) {
@@ -51,6 +78,9 @@ class UploadController extends AbstractController
             throw new BadRequestHttpException($e->getMessage());
         }
         $fileChunk = FileChunk::create($request, $file);
+        if ($fileChunk->getNumber() === 0) {
+            $this->checkIfWritable($handler->getFilesystem(), $logger);
+        }
         $handler->setChunk($fileChunk)->storeChunk();
 
         return new JsonResponse([
