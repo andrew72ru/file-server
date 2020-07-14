@@ -9,7 +9,6 @@ namespace App\Controller;
 
 use App\Service\{Exception\HandlerNotFoundException, FileChunk, FileReceiverInterface};
 use League\Flysystem\FileNotFoundException;
-use League\Flysystem\Filesystem;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{File\UploadedFile, JsonResponse, Request};
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
