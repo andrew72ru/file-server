@@ -8,13 +8,13 @@ namespace App\Controller;
 use App\Service\Exception\HandlerNotFoundException;
 use App\Service\FileReceiverInterface;
 use App\Service\Handler\ImageHandler;
-use Behat\Transliterator\Transliterator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * Direct upload controller.
@@ -60,7 +60,10 @@ class DirectUploadController extends AbstractController
             throw new BadRequestHttpException($e->getMessage());
         }
 
-        $host = Transliterator::urlize($request->getHost());
+        $slugger = new AsciiSlugger();
+        $host = strtolower(
+            $slugger->slug($request->getHost())
+        );
 
         $targetName = \vsprintf('%s/%s/%s.%s', [
             $host,
