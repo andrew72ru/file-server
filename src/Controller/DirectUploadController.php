@@ -62,7 +62,7 @@ class DirectUploadController extends AbstractController
         }
 
         $slugger = new AsciiSlugger();
-        $remoteHost = $request->server->get('REMOTE_HOST', 'unknown');
+        $remoteHost = $request->server->get('REMOTE_HOST', '');
         $path = $slugger->slug($remoteHost)->toString();
         if (($tp = $request->get(FileChunk::TARGET_PATH)) !== null) {
             $path = \sprintf('%s/%s', $path, \ltrim($tp, '/'));
