@@ -61,8 +61,8 @@ build_cloud_image:
     refs:
       - master
       - 12-deploy-to-yandex-cloud
-    before_script:
-      - cat ${YC_KEY} | docker login --username json_key --password-stdin cr.yandex
+  before_script:
+    - cat ${YC_KEY} | docker login --username json_key --password-stdin cr.yandex
   script:
     - docker build -t cr.yandex/${YC_FOLDER}/files/prod:${CI_COMMIT_SHORT_SHA} -f yc.Dockerfile .
     - docker tag cr.yandex/${YC_FOLDER}/files/prod:${CI_COMMIT_SHORT_SHA} cr.yandex/${YC_FOLDER}/files/prod:prepare
