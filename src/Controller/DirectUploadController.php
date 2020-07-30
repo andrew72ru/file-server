@@ -6,6 +6,7 @@
 namespace App\Controller;
 
 use App\Service\Exception\HandlerNotFoundException;
+use App\Service\FileChunk;
 use App\Service\FileReceiverInterface;
 use App\Service\Handler\ImageHandler;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -61,16 +62,12 @@ class DirectUploadController extends AbstractController
         }
 
         $slugger = new AsciiSlugger();
-        $host = strtolower(
-            (string) $slugger->slug($request->getHost())
-        );
-
-        $targetName = \vsprintf('%s/%s/%s.%s', [
-            $host,
-            \rtrim(($request->get(self::TARGET_PATH_PARAM, null) ?? ''), '/'),
-            \uuid_create(),
-            $file->guessExtension(),
-        ]);
+        $remoteHost = $request->server->get('REMOTE_HOST', 'unknown');
+        $path = $slugger->slug($remoteHost)->toString();
+        if (($tp = $request->get(FileChunk::TARGET_PATH)) !== null) {
+            $path = \sprintf('%s/%s', $path, \ltrim($tp, '/'));
+        }
+        $targetName = \sprintf('%s/%s.%s', $path, \uuid_create(), $file->guessExtension());
 
         if (!$fs->put($targetName, \file_get_contents($file->getPathname()))) {
             throw new BadRequestHttpException('Unable to store file');

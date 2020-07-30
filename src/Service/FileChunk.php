@@ -64,13 +64,12 @@ final class FileChunk implements FileChunkInterface
             (string) $request->get(self::UNIQUE_ID),
             $file,
         );
+        $path = (new AsciiSlugger())->slug($request->server->get('REMOTE_HOST', 'unknown'))->toString();
+
         if (($tp = $request->get(self::TARGET_PATH, null)) !== null) {
-            $slugger = new AsciiSlugger();
-            $host = strtolower(
-                (string) $slugger->slug($request->getHost())
-            );
-            $result->setTargetPath(sprintf('%s/%s', $host, $tp));
+            $path = \sprintf('%s/%s', $path, \ltrim($tp, '/'));
         }
+        $result->setTargetPath($path);
 
         return $result;
     }
