@@ -169,6 +169,10 @@ abstract class AbstractHandler implements HandlerInterface
             return null;
         }
 
+        if (($tp = $this->chunk->getTargetPath()) !== null) {
+            $filename = \sprintf('%s/%s', \rtrim($tp, '/'), $filename);
+        }
+
         if ($this->urlPrefix !== null) {
             return \sprintf('%s/%s', rtrim($this->urlPrefix, '/'), $filename);
         }
