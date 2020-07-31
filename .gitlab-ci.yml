@@ -59,7 +59,7 @@ build_cloud_image:
   stage: build_cloud
   only:
     refs:
-      - master
+      - yandex-cloud-storage
   before_script:
     - cat ${YC_KEY} | docker login --username json_key --password-stdin cr.yandex
   script:
@@ -74,7 +74,7 @@ deploy:
   stage: release
   only:
     refs:
-      - master
+      - yandex-cloud-storage
   variables:
     WORKING_IMAGE: cr.yandex/${YC_FOLDER}/files/prod:${CI_COMMIT_SHORT_SHA}
   script:
