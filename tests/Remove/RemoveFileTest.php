@@ -48,6 +48,23 @@ class RemoveFileTest extends KernelTestCase
         $this->assertFalse($this->fs->has($this->filename));
     }
 
+    public function testNormalFileDeletionWithPath(): void
+    {
+        $filename = 'folder/IMG_0144.jpg';
+        $path = $this->getDataDir($filename);
+
+        $this->fs->put($filename, \file_get_contents($path));
+        /** @var DeleteController $controller */
+        $controller = self::$container->get(DeleteController::class);
+        $request = Request::create('/del', 'DELETE');
+        $request->headers->set(DeleteController::SECURITY_HEADER, ($_ENV['SECURITY_HEADER_SECRET'] ?? $_SERVER['SECURITY_HEADER_SECRET']));
+
+        $response = $controller($request, 'images', $filename);
+
+        $this->assertEquals(Response::HTTP_NO_CONTENT, $response->getStatusCode());
+        $this->assertFalse($this->fs->has($filename));
+    }
+
     public function testFileNotFound(): void
     {
         $this->expectException(NotFoundHttpException::class);
