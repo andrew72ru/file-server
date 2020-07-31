@@ -17,7 +17,7 @@ use Symfony\Component\{HttpFoundation\HeaderBag,
 /**
  * Remove file.
  *
- * @Route(name="delete_file", path="/delete/{type}/{filename}", methods={"DELETE"})
+ * @Route(name="delete_file", path="/delete/{type}/{filename}", requirements={"filename"=".+"}, methods={"DELETE"})
  */
 class DeleteController extends AbstractFileAccessController
 {
