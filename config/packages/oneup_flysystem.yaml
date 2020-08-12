@@ -2,11 +2,11 @@
 oneup_flysystem:
   adapters:
     image.adapter:
-      local:
-        directory: '%kernel.cache_dir%/images'
+      custom:
+        service: creative_selectel.adapter.adapter
     video.adapter:
-      local:
-        directory: '%kernel.cache_dir%/video'
+      custom:
+        service: creative_selectel.adapter.adapter
   filesystems:
     image.filesystem:
       adapter: image.adapter

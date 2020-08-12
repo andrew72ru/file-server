@@ -6,6 +6,7 @@
     "ext-ctype": "*",
     "ext-iconv": "*",
     "ext-json": "*",
+    "creative-packages/selectel-flysystem-bundle": "^1.2",
     "doctrine/annotations": "^1.10",
     "nelmio/cors-bundle": "^2.0",
     "oneup/flysystem-bundle": "^3.4",
@@ -28,6 +29,12 @@
     "symfony/var-dumper": "5.0.*",
     "vimeo/psalm": "^3.11"
   },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://git.crtweb.ru/creative-packages/selectel-flysystem-bundle.git"
+    }
+  ],
   "config": {
     "preferred-install": {
       "*": "dist"
