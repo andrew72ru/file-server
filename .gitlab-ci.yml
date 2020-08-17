@@ -2,7 +2,6 @@ stages:
   - build
   - test
   - build_prod
-  - build_cloud
   - release
 
 cache:
@@ -54,19 +53,10 @@ build_prod:
   script:
     - docker build --build-arg CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}/app/dev -t $CI_REGISTRY_IMAGE/app/prod:latest -f production.Dockerfile .
     - docker push $CI_REGISTRY_IMAGE/app/prod:latest
-
-build_cloud_image:
-  stage: build_cloud
-  only:
-    refs:
-      - yandex-cloud-storage
-  before_script:
-    - cat ${YC_KEY} | docker login --username json_key --password-stdin cr.yandex
-  script:
-    - docker build -t cr.yandex/${YC_FOLDER}/files/prod:${CI_COMMIT_SHORT_SHA} -f yc.Dockerfile .
-    - docker tag cr.yandex/${YC_FOLDER}/files/prod:${CI_COMMIT_SHORT_SHA} cr.yandex/${YC_FOLDER}/files/prod:prepare
-    - docker push cr.yandex/${YC_FOLDER}/files/prod:${CI_COMMIT_SHORT_SHA}
-    - docker push cr.yandex/${YC_FOLDER}/files/prod:prepare
+    - docker tag $CI_REGISTRY_IMAGE/app/prod:latest $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
+    - docker push $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
+    - docker tag $CI_REGISTRY_IMAGE/app/prod:latest $CI_REGISTRY_IMAGE/app/prod:prepare
+    - docker push $CI_REGISTRY_IMAGE/app/prod:prepare
 
 deploy:
   image:
