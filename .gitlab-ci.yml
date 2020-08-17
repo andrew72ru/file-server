@@ -54,9 +54,9 @@ build_prod:
   script:
     - docker build --build-arg CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}/app/dev -t $CI_REGISTRY_IMAGE/app/prod:latest -f production.Dockerfile .
     - docker push $CI_REGISTRY_IMAGE/app/prod:latest
-    - docker tag $CI_REGISTRY_IMAGE/app/prod:latest $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
+    - docker build -t $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA} -f selectel.Dockerfile .
     - docker push $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
-    - docker tag $CI_REGISTRY_IMAGE/app/prod:latest $CI_REGISTRY_IMAGE/app/prod:prepare
+    - docker tag $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA} $CI_REGISTRY_IMAGE/app/prod:prepare
     - docker push $CI_REGISTRY_IMAGE/app/prod:prepare
 
 deploy:
