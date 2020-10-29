@@ -170,7 +170,6 @@ class DownloadController extends AbstractFileAccessController
     {
         \set_time_limit(0);
         \fseek($resource, $start);
-        $outputStream = \fopen('php://output', 'wb');
         $i = $start;
         $this->logger->info('Callback info', [
             'place' => \ftell($resource),
@@ -184,7 +183,7 @@ class DownloadController extends AbstractFileAccessController
                 $bytesToRead = $end - $i + 1;
             }
 
-            \fwrite($outputStream, \fread($resource, $bytesToRead));
+            echo \fread($resource, $bytesToRead);
             \flush();
             $i += $bytesToRead;
         }
