@@ -10,11 +10,6 @@ cache:
 
 build:
   stage: build
-  image: docker:git
-  services:
-    - docker:dind
-  variables:
-    DOCKER_DRIVER: overlay
   only:
     refs:
       - master
@@ -38,11 +33,6 @@ test:
 
 build_prod:
   stage: build_prod
-  image: docker:git
-  services:
-    - docker:dind
-  variables:
-    DOCKER_DRIVER: overlay
   only:
     refs:
       - master
