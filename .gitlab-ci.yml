@@ -47,15 +47,16 @@ build_prod:
   only:
     refs:
       - master
+      - selectel-filesystem
   before_script:
     - echo '192.168.88.240    git.crtweb.ru' >> /etc/hosts
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" $CI_REGISTRY --password-stdin
   script:
     - docker build --build-arg CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}/app/dev -t $CI_REGISTRY_IMAGE/app/prod:latest -f production.Dockerfile .
     - docker push $CI_REGISTRY_IMAGE/app/prod:latest
-    - docker tag $CI_REGISTRY_IMAGE/app/prod:latest $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
+    - docker build -t $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA} -f selectel.Dockerfile .
     - docker push $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
-    - docker tag $CI_REGISTRY_IMAGE/app/prod:latest $CI_REGISTRY_IMAGE/app/prod:prepare
+    - docker tag $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA} $CI_REGISTRY_IMAGE/app/prod:prepare
     - docker push $CI_REGISTRY_IMAGE/app/prod:prepare
 
 deploy:
@@ -64,8 +65,8 @@ deploy:
   stage: release
   only:
     refs:
-      - yandex-cloud-storage
+      - selectel-filesystem
   variables:
-    WORKING_IMAGE: cr.yandex/${YC_FOLDER}/files/prod:${CI_COMMIT_SHORT_SHA}
+    WORKING_IMAGE: $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
   script:
-    - kubectl set image deployment/files-deployment files-app=${WORKING_IMAGE} --kubeconfig ${KUBECONFIG} --record
+    - kubectl set image deployment/files-deployment files-app=${WORKING_IMAGE} --kubeconfig ${KUBECONFIG_SELECTEL} --record
