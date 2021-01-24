@@ -10,12 +10,14 @@ cache:
 
 build:
   stage: build
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
   only:
     refs:
       - master
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" $CI_REGISTRY --password-stdin
   script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
     - docker build -t $CI_REGISTRY_IMAGE/app/dev:latest -f Dockerfile .
     - docker push $CI_REGISTRY_IMAGE/app/dev:latest
 
@@ -33,20 +35,16 @@ test:
 
 build_prod:
   stage: build_prod
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
   only:
     refs:
       - master
-      - selectel-filesystem
-  before_script:
-    - echo '192.168.88.240    git.crtweb.ru' >> /etc/hosts
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" $CI_REGISTRY --password-stdin
   script:
-    - docker build --build-arg CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}/app/dev -t $CI_REGISTRY_IMAGE/app/prod:latest -f production.Dockerfile .
-    - docker push $CI_REGISTRY_IMAGE/app/prod:latest
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
     - docker build -t $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA} -f selectel.Dockerfile .
     - docker push $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
-    - docker tag $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA} $CI_REGISTRY_IMAGE/app/prod:prepare
-    - docker push $CI_REGISTRY_IMAGE/app/prod:prepare
 
 deploy:
   image:
@@ -58,4 +56,7 @@ deploy:
   variables:
     WORKING_IMAGE: $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
   script:
-    - kubectl set image deployment/files-deployment files-app=${WORKING_IMAGE} --kubeconfig ${KUBECONFIG_SELECTEL} --record
+    - kubectl set image deployment/files-deployment
+      composer=${WORKING_IMAGE}
+      files-mode=${WORKING_IMAGE}
+      files-app=${WORKING_IMAGE} --kubeconfig ${KUBECONFIG_SELECTEL} --record
