@@ -26,7 +26,7 @@ test:
   image: $CI_REGISTRY_IMAGE/app/dev:latest
   only:
     refs:
-      - master
+      - develop
   before_script:
     - composer install --prefer-dist --optimize-autoloader --classmap-authoritative --no-interaction --no-ansi
   script:
@@ -52,7 +52,7 @@ deploy:
   stage: release
   only:
     refs:
-      - selectel-filesystem
+      - master
   variables:
     WORKING_IMAGE: $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
   script:
