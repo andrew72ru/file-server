@@ -1,11 +1,8 @@
 <?php declare(strict_types=1);
-/**
- * 14.05.2020.
- */
 
 namespace App\Controller\FileAccess;
 
-use League\Flysystem\FileNotFoundException;
+use League\Flysystem\FilesystemException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\{HttpFoundation\HeaderBag,
     HttpFoundation\Request,
@@ -25,10 +22,6 @@ class DeleteController extends AbstractFileAccessController
 
     private LoggerInterface $logger;
 
-    /**
-     * @param array           $filesystems
-     * @param LoggerInterface $logger
-     */
     public function __construct(array $filesystems, LoggerInterface $logger)
     {
         parent::__construct($filesystems);
@@ -36,10 +29,6 @@ class DeleteController extends AbstractFileAccessController
     }
 
     /**
-     * @param Request $request
-     * @param string  $type
-     * @param string  $filename
-     *
      * @return Response
      */
     public function __invoke(Request $request, string $type, string $filename)
@@ -53,15 +42,13 @@ class DeleteController extends AbstractFileAccessController
             $this->logger->info(\sprintf('File \'%s\' was deleted from \'%s\'', $filename, $type), \array_merge($request->headers->all(), $request->server->all()));
 
             return new Response(null, Response::HTTP_NO_CONTENT);
-        } catch (FileNotFoundException $e) {
+        } catch (FilesystemException $e) {
             throw new NotFoundHttpException(\sprintf('File \'%s\' not found in \'%s\'', $filename, $type));
         }
     }
 
     /**
      * Checks the request protection header.
-     *
-     * @param HeaderBag $headers
      */
     protected function checkSecurityHeader(HeaderBag $headers): void
     {

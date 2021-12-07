@@ -21,11 +21,6 @@ abstract class AbstractFileAccessController extends AbstractController
         $this->filesystems = $filesystems;
     }
 
-    /**
-     * @param string $type
-     *
-     * @return FilesystemOperator
-     */
     protected function getFs(string $type): FilesystemOperator
     {
         $fs = $this->filesystems[$type] ?? null;

@@ -50,8 +50,18 @@ services:
     arguments:
       - ['@file_handler.video', '@file_handler.image']
 
-  App\Controller\FileAccess\:
-    resource: '../src/Controller/FileAccess'
+  App\Service\StreamProvider:
+    arguments:
+      $adapters: { images: '@oneup_flysystem.image.adapter_adapter', video: '@oneup_flysystem.video.adapter_adapter' }
+      $s3Client: '@Aws\S3\S3ClientInterface'
+      $bucket: '%env(SELECTEL_CONTAINER)%'
+
+  App\Controller\FileAccess\DeleteController:
     arguments:
       $filesystems: {images: '@oneup_flysystem.image.filesystem_filesystem', video: '@oneup_flysystem.video.filesystem_filesystem'}
-      $bucketName: '%env(SELECTEL_CONTAINER)%'
+    tags: ['controller.service_arguments']
+
+  App\Controller\FileAccess\DownloadController:
+    tags: ['controller.service_arguments']
+    arguments:
+      $filesystems: {images: '@oneup_flysystem.image.filesystem_filesystem', video: '@oneup_flysystem.video.filesystem_filesystem'}

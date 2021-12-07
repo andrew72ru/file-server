@@ -30,11 +30,6 @@ class FileReceiver implements FileReceiverInterface
         $this->fileHandlers = $fileHandlers;
     }
 
-    /**
-     * @param string $name
-     *
-     * @return HandlerInterface
-     */
     public function getHandler(string $name): HandlerInterface
     {
         foreach ($this->fileHandlers as $fileHandler) {

@@ -38,7 +38,8 @@ RUN set -xe \
         pcntl \
         sockets \
         exif \
-        iconv
+        iconv \
+        intl
 
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 

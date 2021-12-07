@@ -1,14 +1,10 @@
-<?php
-/**
- * 04.05.2020.
- */
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace App\Controller\FileAccess;
 
 use App\Service\ByteFormatter;
-use League\Flysystem\FileNotFoundException;
+use App\Service\StreamProvider;
+use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\{HeaderUtils, Request, Response, StreamedResponse};
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,20 +22,15 @@ class DownloadController extends AbstractFileAccessController
     protected const IMAGE_DEMO_NAME = 'image-demo-775fdA.jpg';
 
     private LoggerInterface $logger;
+    private StreamProvider $streamProvider;
 
-    public function __construct(array $filesystems, LoggerInterface $logger)
+    public function __construct(array $filesystems, LoggerInterface $logger, StreamProvider $streamProvider)
     {
         parent::__construct($filesystems);
         $this->logger = $logger;
+        $this->streamProvider = $streamProvider;
     }
 
-    /**
-     * @param Request $request
-     * @param string  $type
-     * @param string  $filename
-     *
-     * @return Response
-     */
     public function __invoke(Request $request, string $type, string $filename): Response
     {
         $this->logger->info(\sprintf('Try to download %s from %s type', $filename, $type));
@@ -47,34 +38,24 @@ class DownloadController extends AbstractFileAccessController
 
         if (\strpos($filename, self::IMAGE_DEMO_NAME) === 0 || \strpos($filename, self::VIDEO_DEMO_NAME) === 0) {
             $path = \sprintf('%s/config/demo/%s', $this->getParameter('kernel.project_dir'), $filename);
-            $fileStream = \fopen($path, 'rb');
             $fileSize = \filesize($path);
             $mimeType = \strpos($filename, self::IMAGE_DEMO_NAME) === 0 ? 'image/jpeg' : 'video/mp4';
 
-            return $this->makeResponse($request, $fileStream, $fileSize, $mimeType, $filename);
+            return $this->makeResponse($request, $this->streamProvider->getStream($path, $type), $fileSize, $mimeType, $filename);
         }
 
         try {
-            $fileStream = $fs->readStream($filename);
-            $fileSize = $fs->getSize($filename);
-            $mimeType = $fs->getMimetype($filename);
-        } catch (FileNotFoundException $e) {
-            throw new NotFoundHttpException(\sprintf('File \'%s\' not found', $filename));
+            $fileStream = $this->streamProvider->getStream($filename, $type);
+            $fileSize = $fileStream->getSize() ?? 0;
+            $mimeType = $fs->mimeType($filename);
+        } catch (\Throwable $e) {
+            throw new NotFoundHttpException($this->notFound($filename));
         }
 
         return $this->makeResponse($request, $fileStream, $fileSize, $mimeType, $filename);
     }
 
-    /**
-     * @param Request  $request
-     * @param resource $fileStream
-     * @param int      $fileSize
-     * @param string   $mimeType
-     * @param string   $filename
-     *
-     * @return Response
-     */
-    protected function makeResponse(Request $request, $fileStream, int $fileSize, string $mimeType, string $filename): Response
+    protected function makeResponse(Request $request, StreamInterface $fileStream, int $fileSize, string $mimeType, string $filename): Response
     {
         $response = new StreamedResponse();
         $response->headers->set('Content-Length', (string) $fileSize);
@@ -100,24 +81,11 @@ class DownloadController extends AbstractFileAccessController
         return $response;
     }
 
-    /**
-     * @param Request          $request
-     * @param int              $size
-     * @param mixed            $resource
-     * @param StreamedResponse $response
-     *
-     * @return Response
-     */
-    protected function makeVideoStream(Request $request, int $size, $resource, StreamedResponse $response): Response
+    protected function makeVideoStream(Request $request, int $size, StreamInterface $resource, StreamedResponse $response): Response
     {
         $this->logger->info('Video stream request', [
             'HTTP_RANGE' => $request->server->get('HTTP_RANGE'),
         ]);
-
-        if (!\is_resource($resource)) {
-            $message = \sprintf('Action %s needs a resource as first argument, %s given', __METHOD__, (\is_object($resource) ? \get_class($resource) : \gettype($resource)));
-            throw new \RuntimeException($message);
-        }
 
         $start = 0;
         $end = $size - 1;
@@ -146,7 +114,7 @@ class DownloadController extends AbstractFileAccessController
             $end = $cEnd;
             $response->setStatusCode(Response::HTTP_PARTIAL_CONTENT);
             $response->headers->set('Content-Length', (string) ($end - $start + 1));
-            $response->headers->set('Content-Range', \sprintf('bytes %s-%s/%s', $start, $end, $size));
+            $response->headers->set('Content-Range', $this->getFormattedBytes($start, $end, $size));
         }
 
         $this->logger->info(\sprintf('Requested bytes from %d to %d', ByteFormatter::format($start), ByteFormatter::format($end)));
@@ -161,29 +129,25 @@ class DownloadController extends AbstractFileAccessController
 
     /**
      * Write part of stream to stdout.
-     *
-     * @param resource $resource
-     * @param int      $start
-     * @param int      $end
      */
-    private function makeStream($resource, int $start, int $end): void
+    private function makeStream(StreamInterface $resource, int $start, int $end): void
     {
         \set_time_limit(0);
-        \fseek($resource, $start);
+        $resource->seek($start);
         $i = $start;
         $this->logger->info('Callback info', [
-            'place' => \ftell($resource),
+            'place' => $resource->tell(),
             'start' => $i,
             'end' => $end,
         ]);
 
-        while (!\feof($resource) && $i <= $end) {
+        while (!$resource->eof() && $i <= $end) {
             $bytesToRead = self::BUFFER_SIZE;
             if (($i + $bytesToRead) > $end) {
                 $bytesToRead = $end - $i + 1;
             }
 
-            echo \fread($resource, $bytesToRead);
+            echo $resource->read($bytesToRead);
             \flush();
             $i += $bytesToRead;
         }
@@ -197,20 +161,17 @@ class DownloadController extends AbstractFileAccessController
     /**
      * Method only for error.
      *
-     * @param StreamedResponse $response
-     * @param int              $cStart   Calculated start
-     * @param int              $cEnd     Calculated end
-     * @param int              $size     Current size
-     * @param int              $start    Native start byte
-     * @param int              $end      Native end byte
-     *
-     * @return Response
+     * @param int $cStart Calculated start
+     * @param int $cEnd   Calculated end
+     * @param int $size   Current size
+     * @param int $start  Native start byte
+     * @param int $end    Native end byte
      */
     protected function wrongRangeRequested(StreamedResponse $response, int $cStart, int $cEnd, int $size, int $start, int $end): Response
     {
         $response->setCallback(fn () => null);
         $response->setStatusCode(Response::HTTP_REQUESTED_RANGE_NOT_SATISFIABLE);
-        $response->headers->set('Content-Range', \sprintf('bytes %s-%s/%s', $start, $end, $size));
+        $response->headers->set('Content-Range', $this->getFormattedBytes($start, $end, $size));
 
         $this->logger->info('Response broken on collation', [
             'cStart > cEnd' => (bool) $cStart > $cEnd,
@@ -229,19 +190,16 @@ class DownloadController extends AbstractFileAccessController
     /**
      * Method only for error.
      *
-     * @param StreamedResponse $response
-     * @param int              $start    Start byte
-     * @param int              $end      End byte
-     * @param int              $size     Current size
-     * @param string           $range    Received range
-     *
-     * @return Response
+     * @param int    $start Start byte
+     * @param int    $end   End byte
+     * @param int    $size  Current size
+     * @param string $range Received range
      */
     protected function wrongRangeDescription(StreamedResponse $response, int $start, int $end, int $size, string $range): Response
     {
         $response->setCallback(fn () => null);
         $response->setStatusCode(Response::HTTP_REQUESTED_RANGE_NOT_SATISFIABLE);
-        $response->headers->set('Content-Range', \sprintf('bytes %s-%s/%s', $start, $end, $size));
+        $response->headers->set('Content-Range', $this->getFormattedBytes($start, $end, $size));
 
         $this->logger->info(\sprintf('Response broken at strpos(%s, \',\')', $range));
         $this->logger->info(\sprintf('Response status %d', $response->getStatusCode()));
@@ -257,5 +215,15 @@ class DownloadController extends AbstractFileAccessController
         $response->headers->set('Accept-Ranges', \sprintf('bytes 0-%d', $size));
         $response->headers->set('Content-Range', \sprintf('bytes %d-%d/%d', $start, $end, $size));
         $response->headers->set('Content-Length', (string) $size);
+    }
+
+    private function getFormattedBytes(int $start, int $end, int $size): string
+    {
+        return \sprintf('bytes %s-%s/%s', $start, $end, $size);
+    }
+
+    private function notFound(string $filename): string
+    {
+        return \sprintf('File \'%s\' not found', $filename);
     }
 }

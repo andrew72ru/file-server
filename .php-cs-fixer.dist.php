@@ -8,6 +8,10 @@ $finder = PhpCsFixer\Finder::create()
     ])
     ->in([
         __DIR__,
+    ])
+    ->exclude([
+        __DIR__ . '/var',
+        __DIR__ . '/vendor',
     ]);
 
 $rules = [

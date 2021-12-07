@@ -12,52 +12,24 @@ use League\Flysystem\FilesystemOperator;
 
 interface HandlerInterface
 {
-    /**
-     * @param FileChunk $chunk
-     *
-     * @return self
-     */
     public function setChunk(FileChunk $chunk): self;
 
-    /**
-     * @return string
-     */
     public function getName(): string;
 
-    /**
-     * @return bool
-     */
     public function storeChunk(): bool;
 
-    /**
-     * @return bool
-     */
     public function isFinished(): bool;
 
-    /**
-     * @return int
-     */
     public function getPercents(): int;
 
-    /**
-     * @return string|null
-     */
     public function getFullFile(): ?string;
 
-    /**
-     * @return string|null
-     */
     public function getFileUrl(): ?string;
 
     /**
-     * @param string|null $prefix
-     *
      * @return $this
      */
     public function setUrlPrefix(string $prefix = null): self;
 
-    /**
-     * @return FilesystemOperator
-     */
     public function getFilesystem(): FilesystemOperator;
 }

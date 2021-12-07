@@ -29,11 +29,6 @@ class DirectUploadController extends AbstractController
         $this->fileReceiver = $fileReceiver;
     }
 
-    /**
-     * @param Request $request
-     *
-     * @return Response
-     */
     public function __invoke(Request $request): Response
     {
         $file = $request->files->get(UploadController::UPLOADED_FIELD);

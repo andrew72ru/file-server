@@ -35,8 +35,6 @@ class UploadController extends AbstractController
     }
 
     /**
-     * @param FilesystemOperator $filesystem
-     * @param LoggerInterface $logger
      * @throws FilesystemException
      */
     private function checkIfWritable(FilesystemOperator $filesystem, LoggerInterface $logger): void
@@ -55,12 +53,6 @@ class UploadController extends AbstractController
         }
     }
 
-    /**
-     * @param Request         $request
-     * @param LoggerInterface $logger
-     *
-     * @return JsonResponse
-     */
     public function __invoke(Request $request, LoggerInterface $logger): JsonResponse
     {
         $file = $request->files->get(self::UPLOADED_FIELD);
