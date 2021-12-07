@@ -1,25 +1,20 @@
-<?php
-/**
- * 04.05.2020.
- */
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace App\Controller\FileAccess;
 
-use League\Flysystem\FilesystemInterface;
+use League\Flysystem\FilesystemOperator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 abstract class AbstractFileAccessController extends AbstractController
 {
     /**
-     * @var FilesystemInterface[]
+     * @var FilesystemOperator[]
      */
     protected array $filesystems;
 
     /**
-     * @param FilesystemInterface[] $filesystems
+     * @param FilesystemOperator[] $filesystems
      */
     public function __construct(array $filesystems)
     {
@@ -29,9 +24,9 @@ abstract class AbstractFileAccessController extends AbstractController
     /**
      * @param string $type
      *
-     * @return FilesystemInterface
+     * @return FilesystemOperator
      */
-    protected function getFs(string $type): FilesystemInterface
+    protected function getFs(string $type): FilesystemOperator
     {
         $fs = $this->filesystems[$type] ?? null;
         if ($fs === null) {

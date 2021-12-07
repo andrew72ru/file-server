@@ -9,8 +9,7 @@ namespace App\Service\Handler;
 
 use App\Service\Exception\InvalidCallException;
 use App\Service\FileChunk;
-use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemInterface;
+use League\Flysystem\FilesystemOperator;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Mime\MimeTypes;
 
@@ -21,11 +20,11 @@ use Symfony\Component\Mime\MimeTypes;
 abstract class AbstractHandler implements HandlerInterface
 {
     protected ?FileChunk $chunk = null;
-    protected Filesystem $filesystem;
+    protected FilesystemOperator $filesystem;
     protected ?string $urlPrefix = null;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function setUrlPrefix(string $prefix = null): HandlerInterface
     {
@@ -35,7 +34,7 @@ abstract class AbstractHandler implements HandlerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function setChunk(FileChunk $chunk): HandlerInterface
     {
@@ -45,7 +44,7 @@ abstract class AbstractHandler implements HandlerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function storeChunk(): bool
     {
@@ -102,14 +101,11 @@ abstract class AbstractHandler implements HandlerInterface
 
         $dstRead = \fopen($dstPath, 'rb');
         $targetName = \sprintf('%s/%s', \rtrim(($this->getTargetPath() ?? ''), '/'), $this->getFilename());
-        $this->filesystem->putStream($targetName, $dstRead);
+        $this->filesystem->writeStream($targetName, $dstRead);
 
         \fclose($dstRead);
     }
 
-    /**
-     * @return string|null
-     */
     protected function getTargetPath(): ?string
     {
         if ($this->chunk === null) {
@@ -119,16 +115,13 @@ abstract class AbstractHandler implements HandlerInterface
         return $this->chunk->getTargetPath();
     }
 
-    /**
-     * @return string
-     */
     protected function tempDirName(): string
     {
         return \sprintf('%s/%s', \sys_get_temp_dir(), $this->chunk->getUniqueId());
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function isFinished(): bool
     {
@@ -138,7 +131,7 @@ abstract class AbstractHandler implements HandlerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getPercents(): int
     {
@@ -149,7 +142,7 @@ abstract class AbstractHandler implements HandlerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getFullFile(): ?string
     {
@@ -160,9 +153,6 @@ abstract class AbstractHandler implements HandlerInterface
         return null;
     }
 
-    /**
-     * @return string|null
-     */
     public function getFileUrl(): ?string
     {
         if (($filename = $this->getFullFile()) === null) {
@@ -174,7 +164,7 @@ abstract class AbstractHandler implements HandlerInterface
         }
 
         if ($this->urlPrefix !== null) {
-            return \sprintf('%s/%s', rtrim($this->urlPrefix, '/'), $filename);
+            return \sprintf('%s/%s', \rtrim($this->urlPrefix, '/'), $filename);
         }
 
         return null;
@@ -182,8 +172,6 @@ abstract class AbstractHandler implements HandlerInterface
 
     /**
      * Filename with extension.
-     *
-     * @return string
      */
     protected function getFilename(): string
     {
@@ -198,13 +186,11 @@ abstract class AbstractHandler implements HandlerInterface
             $extension = $ex[0];
         }
 
-        return sprintf('%s.%s', $this->chunk->getUniqueId(), $extension);
+        return \sprintf('%s.%s', $this->chunk->getUniqueId(), $extension);
     }
 
     /**
      * Uploaded file.
-     *
-     * @return File
      */
     protected function getFile(): File
     {
@@ -224,7 +210,7 @@ abstract class AbstractHandler implements HandlerInterface
     /**
      * {@inheritDoc}
      */
-    public function getFilesystem(): FilesystemInterface
+    public function getFilesystem(): FilesystemOperator
     {
         return $this->filesystem;
     }

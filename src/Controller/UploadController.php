@@ -8,8 +8,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\{Exception\HandlerNotFoundException, FileChunk, FileReceiverInterface};
-use League\Flysystem\FileNotFoundException;
-use League\Flysystem\FilesystemInterface;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{File\UploadedFile, JsonResponse, Request};
@@ -35,21 +35,20 @@ class UploadController extends AbstractController
     }
 
     /**
-     * @param FilesystemInterface $filesystem
-     * @param LoggerInterface     $logger
+     * @param FilesystemOperator $filesystem
+     * @param LoggerInterface $logger
+     * @throws FilesystemException
      */
-    private function checkIfWritable(FilesystemInterface $filesystem, LoggerInterface $logger): void
+    private function checkIfWritable(FilesystemOperator $filesystem, LoggerInterface $logger): void
     {
         $tempFile = \uuid_create();
-        if (
-            $filesystem->put($tempFile, 'Test file. Should be deleted.') === false &&
-            !$filesystem->has($tempFile)
-        ) {
+        $filesystem->write($tempFile, 'Test file. Should be deleted.');
+        if (!$filesystem->fileExists($tempFile)) {
             throw new HttpException(523, 'Unable to store file');
         }
         try {
             $filesystem->delete($tempFile);
-        } catch (FileNotFoundException $e) {
+        } catch (FilesystemException $e) {
             $logger->error('Unable to delete temporary file', [
                 'file' => $tempFile,
             ]);

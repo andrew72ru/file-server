@@ -1,5 +1,0 @@
-creative_selectel:
-  account_id: '%env(SELECTEL_ACCOUNT_ID)%'
-  client_id: '%env(SELECTEL_CLIENT_ID)%'
-  client_password: '%env(SELECTEL_CLIENT_PASSWORD)%'
-  container: '%env(SELECTEL_CONTAINER)%'

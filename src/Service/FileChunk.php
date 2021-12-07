@@ -35,11 +35,6 @@ final class FileChunk implements FileChunkInterface
 
     /**
      * Factory method.
-     *
-     * @param Request $request
-     * @param File    $file
-     *
-     * @return self
      */
     public static function create(Request $request, File $file): self
     {
@@ -79,15 +74,8 @@ final class FileChunk implements FileChunkInterface
 
     /**
      * FileChunk constructor.
-     *
-     * @param int    $size
-     * @param int    $currentSize
-     * @param int    $number
-     * @param int    $totalSize
-     * @param string $uniqueId
-     * @param File   $file
      */
-    protected function __construct(int $size, int $currentSize, int $number, int $totalSize, string $uniqueId, File $file)
+    private function __construct(int $size, int $currentSize, int $number, int $totalSize, string $uniqueId, File $file)
     {
         $this->size = $size;
         $this->currentSize = $currentSize;
@@ -109,57 +97,36 @@ final class FileChunk implements FileChunkInterface
         return $this->targetPath;
     }
 
-    /**
-     * @return int
-     */
     public function getSize(): int
     {
         return $this->size;
     }
 
-    /**
-     * @return int
-     */
     public function getCurrentSize(): int
     {
         return $this->currentSize;
     }
 
-    /**
-     * @return int
-     */
     public function getNumber(): int
     {
         return $this->number;
     }
 
-    /**
-     * @return int
-     */
     public function getTotalSize(): int
     {
         return $this->totalSize;
     }
 
-    /**
-     * @return string
-     */
     public function getUniqueId(): string
     {
         return $this->uniqueId;
     }
 
-    /**
-     * @return File
-     */
     public function getFile(): File
     {
         return $this->file;
     }
 
-    /**
-     * @return int
-     */
     public function getChunksCount(): int
     {
         return (int) \ceil($this->totalSize / $this->size);

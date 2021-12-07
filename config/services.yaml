@@ -9,9 +9,6 @@ services:
     autowire: true      # Automatically injects dependencies in your services.
     autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-  League\Flysystem\FilesystemInterface:
-    alias: League\Flysystem\Filesystem
-
   App\:
     resource: '../src/*'
     exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
@@ -19,6 +16,18 @@ services:
   App\Controller\:
     resource: '../src/Controller'
     tags: ['controller.service_arguments']
+
+  Aws\S3\S3ClientInterface:
+    class: Aws\S3\S3Client
+    arguments:
+      -
+        version: 'latest'
+        region: 'ru-1a'
+        use_path_style_endpoint: true
+        endpoint: '%env(SELECTEL_S3_ENDPOINT)%'
+        credentials:
+          key: '%env(SELECTEL_CLIENT_ID)%'
+          secret: '%env(SELECTEL_CLIENT_PASSWORD)%'
 
   file_handler.image:
     class: App\Service\Handler\ImageHandler
@@ -44,5 +53,5 @@ services:
   App\Controller\FileAccess\:
     resource: '../src/Controller/FileAccess'
     arguments:
-      - images: '@oneup_flysystem.image.filesystem_filesystem'
-        video: '@oneup_flysystem.video.filesystem_filesystem'
+      $filesystems: {images: '@oneup_flysystem.image.filesystem_filesystem', video: '@oneup_flysystem.video.filesystem_filesystem'}
+      $bucketName: '%env(SELECTEL_CONTAINER)%'

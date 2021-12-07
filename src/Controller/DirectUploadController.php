@@ -1,7 +1,4 @@
 <?php declare(strict_types=1);
-/**
- * 01.06.2020.
- */
 
 namespace App\Controller;
 
@@ -9,6 +6,7 @@ use App\Service\Exception\HandlerNotFoundException;
 use App\Service\FileChunk;
 use App\Service\FileReceiverInterface;
 use App\Service\Handler\ImageHandler;
+use League\Flysystem\FilesystemException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,11 +22,6 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
  */
 class DirectUploadController extends AbstractController
 {
-    public const TARGET_PATH_PARAM = 'path';
-
-    /**
-     * @var FileReceiverInterface
-     */
     private FileReceiverInterface $fileReceiver;
 
     public function __construct(FileReceiverInterface $fileReceiver)
@@ -67,10 +60,12 @@ class DirectUploadController extends AbstractController
         if (($tp = $request->get(FileChunk::TARGET_PATH)) !== null) {
             $path = \sprintf('%s/%s', $path, \ltrim($tp, '/'));
         }
-        $targetName = \sprintf('%s/%s.%s', $path, \uuid_create(), $file->guessExtension());
+        $targetName = \sprintf('%s/%s.%s', $path, \uuid_create(), ($file->guessExtension() ?? ''));
 
-        if (!$fs->put($targetName, \file_get_contents($file->getPathname()))) {
-            throw new BadRequestHttpException('Unable to store file');
+        try {
+            $fs->write($targetName, $file->getContent());
+        } catch (FilesystemException $e) {
+            throw new BadRequestHttpException('Unable to store file', $e);
         }
 
         return $this->redirectToRoute('download_file', [

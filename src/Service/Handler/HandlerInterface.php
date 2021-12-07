@@ -8,7 +8,7 @@ declare(strict_types=1);
 namespace App\Service\Handler;
 
 use App\Service\FileChunk;
-use League\Flysystem\FilesystemInterface;
+use League\Flysystem\FilesystemOperator;
 
 interface HandlerInterface
 {
@@ -57,7 +57,7 @@ interface HandlerInterface
     public function setUrlPrefix(string $prefix = null): self;
 
     /**
-     * @return FilesystemInterface
+     * @return FilesystemOperator
      */
-    public function getFilesystem(): FilesystemInterface;
+    public function getFilesystem(): FilesystemOperator;
 }
