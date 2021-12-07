@@ -9,6 +9,7 @@ namespace App\Service\Handler;
 
 use App\Service\Exception\InvalidCallException;
 use App\Service\FileChunk;
+use App\Service\FileChunkInterface;
 use League\Flysystem\FilesystemOperator;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Mime\MimeTypes;
@@ -36,7 +37,7 @@ abstract class AbstractHandler implements HandlerInterface
     /**
      * {@inheritDoc}
      */
-    public function setChunk(FileChunk $chunk): HandlerInterface
+    public function setChunk(FileChunkInterface $chunk): HandlerInterface
     {
         $this->chunk = $chunk;
 

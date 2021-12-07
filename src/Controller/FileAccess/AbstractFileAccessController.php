@@ -16,7 +16,7 @@ abstract class AbstractFileAccessController extends AbstractController
     /**
      * @param FilesystemOperator[] $filesystems
      */
-    public function __construct(array $filesystems)
+    public function __construct(iterable $filesystems)
     {
         $this->filesystems = $filesystems;
     }

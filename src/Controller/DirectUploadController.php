@@ -15,11 +15,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
-/**
- * Direct upload controller.
- *
- * @Route(name="direct_upload_file", path="/direct-upload")
- */
+#[Route(path: '/direct-upload', name: 'direct_upload_file')]
 class DirectUploadController extends AbstractController
 {
     private FileReceiverInterface $fileReceiver;

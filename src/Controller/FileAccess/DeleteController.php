@@ -11,27 +11,17 @@ use Symfony\Component\{HttpFoundation\HeaderBag,
     HttpKernel\Exception\NotFoundHttpException,
     Routing\Annotation\Route};
 
-/**
- * Remove file.
- *
- * @Route(name="delete_file", path="/delete/{type}/{filename}", requirements={"filename"=".+"}, methods={"DELETE"})
- */
+#[Route(path: '/delete/{type}/{filename}', name: 'delete_file', requirements: ['filename' => '.+'], methods: ['DELETE'])]
 class DeleteController extends AbstractFileAccessController
 {
     public const SECURITY_HEADER = 'X-Security-Token';
 
-    private LoggerInterface $logger;
-
-    public function __construct(array $filesystems, LoggerInterface $logger)
+    public function __construct(array $filesystems, private LoggerInterface $logger)
     {
         parent::__construct($filesystems);
-        $this->logger = $logger;
     }
 
-    /**
-     * @return Response
-     */
-    public function __invoke(Request $request, string $type, string $filename)
+    public function __invoke(Request $request, string $type, string $filename): Response
     {
         $this->logger->info(\sprintf('Try to delete \'%s\' file from \'%s\' category', $filename, $type));
         $fs = $this->getFs($type);

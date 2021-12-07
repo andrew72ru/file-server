@@ -6,9 +6,7 @@ use App\Service\Exception\{AdapterNotFoundException, NotImplementedException};
 use Aws\ResultInterface;
 use Aws\S3\S3ClientInterface;
 use GuzzleHttp\Psr7\Stream;
-use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
-use League\Flysystem\FilesystemAdapter;
-use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\{AwsS3V3\AwsS3V3Adapter, FilesystemAdapter, Local\LocalFilesystemAdapter};
 use Psr\Http\Message\StreamInterface;
 
 class StreamProvider
@@ -33,14 +31,11 @@ class StreamProvider
     public function getStream(string $path, string $type): StreamInterface
     {
         $adapter = $this->getAdapter($type);
-        switch (true) {
-            case $adapter instanceof AwsS3V3Adapter:
-                return $this->getS3Stream($path);
-            case $adapter instanceof LocalFilesystemAdapter:
-                return $this->getLocalStream($path);
-            default:
-                throw new NotImplementedException(\sprintf('Process with \'%s\' adapter not implemented yet', \get_class($adapter)));
-        }
+        return match (true) {
+            $adapter instanceof AwsS3V3Adapter => $this->getS3Stream($path),
+            $adapter instanceof LocalFilesystemAdapter => $this->getLocalStream($path),
+            default => throw new NotImplementedException(\sprintf('Process with \'%s\' adapter not implemented yet', \get_class($adapter))),
+        };
     }
 
     private function getLocalStream(string $path): StreamInterface

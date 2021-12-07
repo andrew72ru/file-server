@@ -4,31 +4,23 @@ namespace App\Controller\FileAccess;
 
 use App\Service\ByteFormatter;
 use App\Service\StreamProvider;
+use GuzzleHttp\Psr7\Stream;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\{HeaderUtils, Request, Response, StreamedResponse};
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * Download as file.
- *
- * @Route(name="download_file", path="/download/{type}/{filename}", requirements={"filename"=".+"})
- */
+#[Route(path: '/download/{type}/{filename}', name: 'download_file', requirements: ['filename' => '.+'])]
 class DownloadController extends AbstractFileAccessController
 {
     protected const BUFFER_SIZE = 1024 * 86;
     protected const VIDEO_DEMO_NAME = 'video-demo-74df86.mp4';
     protected const IMAGE_DEMO_NAME = 'image-demo-775fdA.jpg';
 
-    private LoggerInterface $logger;
-    private StreamProvider $streamProvider;
-
-    public function __construct(array $filesystems, LoggerInterface $logger, StreamProvider $streamProvider)
+    public function __construct(array $filesystems, private LoggerInterface $logger, private StreamProvider $streamProvider)
     {
         parent::__construct($filesystems);
-        $this->logger = $logger;
-        $this->streamProvider = $streamProvider;
     }
 
     public function __invoke(Request $request, string $type, string $filename): Response
@@ -36,12 +28,8 @@ class DownloadController extends AbstractFileAccessController
         $this->logger->info(\sprintf('Try to download %s from %s type', $filename, $type));
         $fs = $this->getFs($type);
 
-        if (\strpos($filename, self::IMAGE_DEMO_NAME) === 0 || \strpos($filename, self::VIDEO_DEMO_NAME) === 0) {
-            $path = \sprintf('%s/config/demo/%s', $this->getParameter('kernel.project_dir'), $filename);
-            $fileSize = \filesize($path);
-            $mimeType = \strpos($filename, self::IMAGE_DEMO_NAME) === 0 ? 'image/jpeg' : 'video/mp4';
-
-            return $this->makeResponse($request, $this->streamProvider->getStream($path, $type), $fileSize, $mimeType, $filename);
+        if (\str_starts_with($filename, self::IMAGE_DEMO_NAME) || \str_starts_with($filename, self::VIDEO_DEMO_NAME)) {
+            return $this->demo($request, $filename);
         }
 
         try {
@@ -49,10 +37,24 @@ class DownloadController extends AbstractFileAccessController
             $fileSize = $fileStream->getSize() ?? 0;
             $mimeType = $fs->mimeType($filename);
         } catch (\Throwable $e) {
-            throw new NotFoundHttpException($this->notFound($filename));
+            throw new NotFoundHttpException($this->notFound($filename), $e);
         }
 
         return $this->makeResponse($request, $fileStream, $fileSize, $mimeType, $filename);
+    }
+
+    protected function demo(Request $request, string $name): Response
+    {
+        $projectDir = $this->getParameter('kernel.project_dir');
+        if (!\is_scalar($projectDir)) {
+            throw new \InvalidArgumentException('\'kernel.project_dir\' parameter should be a string');
+        }
+        $path = \sprintf('%s/config/demo/%s', $projectDir, $name);
+
+        $fileSize = \filesize($path);
+        $mimeType = \str_starts_with($name, self::IMAGE_DEMO_NAME) ? 'image/jpeg' : 'video/mp4';
+
+        return $this->makeResponse($request, new Stream(\fopen($path, 'rb')), $fileSize, $mimeType, $name);
     }
 
     protected function makeResponse(Request $request, StreamInterface $fileStream, int $fileSize, string $mimeType, string $filename): Response
@@ -60,13 +62,13 @@ class DownloadController extends AbstractFileAccessController
         $response = new StreamedResponse();
         $response->headers->set('Content-Length', (string) $fileSize);
 
-        if (\strpos($mimeType, 'video') === 0) {
+        if (\str_starts_with($mimeType, 'video')) {
             $response->headers->set('Content-type', $mimeType);
 
             return $this->makeVideoStream($request, $fileSize, $fileStream, $response);
         }
 
-        if (\strpos($mimeType, 'image') === 0) {
+        if (\str_starts_with($mimeType, 'image')) {
             $response->headers->set('Content-type', $mimeType);
         } else {
             $disposition = HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $filename);
@@ -96,7 +98,7 @@ class DownloadController extends AbstractFileAccessController
             $cEnd = $end;
 
             [, $range] = \explode('=', $rangeHeader, 2);
-            if (\strpos($range, ',') !== false) {
+            if (\str_contains($range, ',')) {
                 return $this->wrongRangeDescription($response, $start, $end, $size, $range);
             }
             $this->logger->info('Request range', ['range' => $range]);
@@ -118,7 +120,7 @@ class DownloadController extends AbstractFileAccessController
         }
 
         $this->logger->info(\sprintf('Requested bytes from %d to %d', ByteFormatter::format($start), ByteFormatter::format($end)));
-        $this->logger->info('Response headers', $response->headers->all());
+        $this->logResponseHeaders($response);
 
         $response->setCallback(function () use ($resource, $start, $end) {
             $this->makeStream($resource, $start, $end);
@@ -182,7 +184,7 @@ class DownloadController extends AbstractFileAccessController
             'size' => $size,
         ]);
         $this->logger->info(\sprintf('Response status %d', $response->getStatusCode()));
-        $this->logger->info('Response headers', $response->headers->all());
+        $this->logResponseHeaders($response);
 
         return $response;
     }
@@ -203,7 +205,7 @@ class DownloadController extends AbstractFileAccessController
 
         $this->logger->info(\sprintf('Response broken at strpos(%s, \',\')', $range));
         $this->logger->info(\sprintf('Response status %d', $response->getStatusCode()));
-        $this->logger->info('Response headers', $response->headers->all());
+        $this->logResponseHeaders($response);
 
         return $response;
     }
@@ -225,5 +227,10 @@ class DownloadController extends AbstractFileAccessController
     private function notFound(string $filename): string
     {
         return \sprintf('File \'%s\' not found', $filename);
+    }
+
+    private function logResponseHeaders(Response $response): void
+    {
+        $this->logger->info('Response headers', $response->headers->all());
     }
 }

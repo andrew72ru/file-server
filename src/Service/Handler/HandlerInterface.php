@@ -8,11 +8,12 @@ declare(strict_types=1);
 namespace App\Service\Handler;
 
 use App\Service\FileChunk;
+use App\Service\FileChunkInterface;
 use League\Flysystem\FilesystemOperator;
 
 interface HandlerInterface
 {
-    public function setChunk(FileChunk $chunk): self;
+    public function setChunk(FileChunkInterface $chunk): self;
 
     public function getName(): string;
 
