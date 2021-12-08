@@ -38,8 +38,8 @@ test:
 build_prod:
   stage: build_prod
   image: docker:latest
-    services:
-      - docker:dind
+  services:
+    - docker:dind
   only:
     refs:
       - master
