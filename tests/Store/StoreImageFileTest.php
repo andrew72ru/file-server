@@ -12,6 +12,7 @@ use App\Service\FileReceiverInterface;
 use App\Service\Handler\HandlerInterface;
 use App\Service\Handler\ImageHandler;
 use App\Tests\KernelTestCase;
+use League\Flysystem\FilesystemOperator;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -58,7 +59,7 @@ class StoreImageFileTest extends KernelTestCase
         $uuid = \uuid_create();
 
         $request = $this->getRequest($uuid, 1);
-        $service = self::$container->get(FileReceiverInterface::class);
+        $service = static::getContainer()->get(FileReceiverInterface::class);
 
         /** @var HandlerInterface $handler */
         $handler = $service->getHandler(ImageHandler::NAME);
@@ -89,7 +90,8 @@ class StoreImageFileTest extends KernelTestCase
             \fclose($dst);
         }
 
-        $fs = self::$container->get('oneup_flysystem.image.filesystem_filesystem');
+        /** @var FilesystemOperator $fs */
+        $fs = static::getContainer()->get('oneup_flysystem.image.filesystem_filesystem');
         $handler = new ImageHandler($fs);
         $request = $this->getRequest($uuid, $this->count);
         $handler->setChunk(FileChunk::create($request, $request->files->get('upload')));
@@ -98,7 +100,7 @@ class StoreImageFileTest extends KernelTestCase
         $merge->setAccessible(true);
         $merge->invoke($handler);
 
-        $this->assertTrue($fs->has(\sprintf('%s.pdf', $uuid)));
+        $this->assertTrue($fs->fileExists(\sprintf('%s.pdf', $uuid)));
 
         $file = $fs->read(\sprintf('%s.pdf', $uuid));
         $origin = \file_get_contents($this->getDataDir('deserialization_tutorial6.pdf'));

@@ -19,8 +19,7 @@ class FileReceiverTest extends KernelTestCase
 {
     public function testLoadedHandlers(): void
     {
-        self::bootKernel();
-        $service = self::$container->get(FileReceiverInterface::class);
+        $service = static::getContainer()->get(FileReceiverInterface::class);
         $this->assertInstanceOf(FileReceiver::class, $service);
 
         $this->assertInstanceOf(ImageHandler::class, $service->getHandler(ImageHandler::NAME));
@@ -30,8 +29,7 @@ class FileReceiverTest extends KernelTestCase
     public function testNotExistsHandler(): void
     {
         $this->expectException(HandlerNotFoundException::class);
-        self::bootKernel();
-        $service = self::$container->get(FileReceiverInterface::class);
+        $service = static::getContainer()->get(FileReceiverInterface::class);
         $service->getHandler('non_existent-handler-name');
     }
 
@@ -39,8 +37,7 @@ class FileReceiverTest extends KernelTestCase
     {
         $this->expectException(InvalidCallException::class);
 
-        self::bootKernel();
-        $service = self::$container->get(FileReceiverInterface::class);
+        $service = static::getContainer()->get(FileReceiverInterface::class);
         $imageHandler = $service->getHandler(ImageHandler::NAME);
         $imageHandler->getPercents();
     }

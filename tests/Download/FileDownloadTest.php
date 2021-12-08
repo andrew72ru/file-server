@@ -9,6 +9,7 @@ namespace App\Tests\Download;
 
 use App\Controller\FileAccess\DownloadController;
 use App\Tests\KernelTestCase;
+use League\Flysystem\FilesystemOperator;
 use Symfony\Component\HttpFoundation\{Request, Response, StreamedResponse};
 use Symfony\Component\HttpKernel\Exception\{BadRequestHttpException, NotFoundHttpException};
 
@@ -16,13 +17,12 @@ class FileDownloadTest extends KernelTestCase
 {
     public function testDownloadFile(): void
     {
-        self::bootKernel();
-
         $path = $this->getDataDir('deserialization_tutorial6.pdf');
-        $imageFs = self::$container->get('oneup_flysystem.image.filesystem_filesystem');
-        $imageFs->put('deserialization_tutorial6.pdf', \file_get_contents($path));
+        /** @var FilesystemOperator $imageFs */
+        $imageFs = static::getContainer()->get('oneup_flysystem.image.filesystem_filesystem');
+        $imageFs->write('deserialization_tutorial6.pdf', \file_get_contents($path));
 
-        $controller = self::$container->get(DownloadController::class);
+        $controller = static::getContainer()->get(DownloadController::class);
         /** @var Response $response */
         $response = $controller(Request::create('/download'), 'images', 'deserialization_tutorial6.pdf');
 
@@ -34,13 +34,12 @@ class FileDownloadTest extends KernelTestCase
 
     public function testDownloadImageFile(): void
     {
-        self::bootKernel();
-
         $path = $this->getDataDir('IMG_0144.jpg');
-        $imageFs = self::$container->get('oneup_flysystem.image.filesystem_filesystem');
-        $imageFs->put('IMG_0144.jpg', \file_get_contents($path));
+        /** @var FilesystemOperator $imageFs */
+        $imageFs = self::getContainer()->get('oneup_flysystem.image.filesystem_filesystem');
+        $imageFs->write('IMG_0144.jpg', \file_get_contents($path));
 
-        $controller = self::$container->get(DownloadController::class);
+        $controller = static::getContainer()->get(DownloadController::class);
         /** @var StreamedResponse $response */
         $response = $controller(Request::create('/download'), 'images', 'IMG_0144.jpg');
 
@@ -55,7 +54,7 @@ class FileDownloadTest extends KernelTestCase
         $this->expectException(BadRequestHttpException::class);
 
         self::bootKernel();
-        $controller = self::$container->get(DownloadController::class);
+        $controller = static::getContainer()->get(DownloadController::class);
         $controller(Request::create('/download'), 'not-registered-type', 'any-file');
     }
 
@@ -63,7 +62,7 @@ class FileDownloadTest extends KernelTestCase
     {
         $this->expectException(NotFoundHttpException::class);
         self::bootKernel();
-        $controller = self::$container->get(DownloadController::class);
+        $controller = static::getContainer()->get(DownloadController::class);
         $controller(Request::create('/download'), 'images', 'not-existing-file.pdf');
     }
 }

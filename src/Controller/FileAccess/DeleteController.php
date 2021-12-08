@@ -27,14 +27,14 @@ class DeleteController extends AbstractFileAccessController
         $fs = $this->getFs($type);
 
         $this->checkSecurityHeader($request->headers);
-        try {
-            $fs->delete($filename);
-            $this->logger->info(\sprintf('File \'%s\' was deleted from \'%s\'', $filename, $type), \array_merge($request->headers->all(), $request->server->all()));
-
-            return new Response(null, Response::HTTP_NO_CONTENT);
-        } catch (FilesystemException $e) {
+        if (!$fs->fileExists($filename)) {
             throw new NotFoundHttpException(\sprintf('File \'%s\' not found in \'%s\'', $filename, $type));
         }
+
+        $fs->delete($filename);
+        $this->logger->info(\sprintf('File \'%s\' was deleted from \'%s\'', $filename, $type), \array_merge($request->headers->all(), $request->server->all()));
+
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 
     /**

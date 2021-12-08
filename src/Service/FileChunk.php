@@ -46,23 +46,23 @@ final class FileChunk implements FileChunkInterface
             self::UNIQUE_ID,
         ];
         foreach ($keys as $key) {
-            if ($request->get($key) === null) {
+            if ($request->request->get($key) === null) {
                 throw new BadRequestHttpException(\sprintf('Request field \'%s\' must be defined', $key));
             }
         }
 
         $result = new self(
-            (int) $request->get(self::CHUNK_SIZE),
-            (int) $request->get(self::CURRENT_CHUNK_SIZE),
-            (int) $request->get(self::CHUNK_NUMBER),
-            (int) $request->get(self::TOTAL_SIZE),
-            (string) $request->get(self::UNIQUE_ID),
+            (int) $request->request->get(self::CHUNK_SIZE),
+            (int) $request->request->get(self::CURRENT_CHUNK_SIZE),
+            (int) $request->request->get(self::CHUNK_NUMBER),
+            (int) $request->request->get(self::TOTAL_SIZE),
+            (string) $request->request->get(self::UNIQUE_ID),
             $file,
         );
         $path = (new AsciiSlugger())->slug($request->server->get('REMOTE_HOST', ''))->toString();
 
-        if (($tp = $request->get(self::TARGET_PATH, null)) !== null) {
-            $path = \sprintf('%s/%s', $path, \ltrim($tp, '/'));
+        if (($tp = $request->request->get(self::TARGET_PATH, null)) !== null) {
+            $path = \sprintf('%s/%s', $path, \ltrim((string) $tp, '/'));
         }
 
         if (!empty($path)) {

@@ -13,6 +13,9 @@ use App\Service\FileReceiverInterface;
 use App\Service\Handler\HandlerInterface;
 use App\Tests\KernelTestCase;
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
+use League\Flysystem\UnableToWriteFile;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -83,14 +86,14 @@ class ControllerTest extends KernelTestCase
 
     public function testChunkUpload(): void
     {
-        self::bootKernel();
         /** @var UploadController $controller */
-        $controller = self::$container->get(UploadController::class);
+        $controller = static::getContainer()->get(UploadController::class);
         /** @var LoggerInterface $logger */
-        $logger = self::$container->get(LoggerInterface::class);
+        $logger = static::getContainer()->get(LoggerInterface::class);
         $uuid = \uuid_create();
-        $fs = self::$container->get('oneup_flysystem.image.filesystem_filesystem');
-        $handler = self::$container->get('file_handler.image');
+        /** @var FilesystemOperator $fs */
+        $fs = static::getContainer()->get('oneup_flysystem.image.filesystem_filesystem');
+        $handler = static::getContainer()->get('file_handler.image');
         $handler->setUrlPrefix('https://google.com/images/');
 
         foreach (\range(0, ($this->count - 1)) as $item) {
@@ -99,7 +102,7 @@ class ControllerTest extends KernelTestCase
             $content = \json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
             if (($content['file'] ?? null) !== null) {
-                $this->assertTrue($fs->has($content['file']));
+                $this->assertTrue($fs->fileExists($content['file']));
                 $this->assertEquals($content['url'], \sprintf('https://google.com/images/%s', $content['file']));
 
                 $file = $fs->read($content['file']);
@@ -113,11 +116,10 @@ class ControllerTest extends KernelTestCase
     {
         $this->expectException(BadRequestHttpException::class);
 
-        self::bootKernel();
         /** @var UploadController $controller */
-        $controller = self::$container->get(UploadController::class);
+        $controller = static::getContainer()->get(UploadController::class);
         /** @var LoggerInterface $logger */
-        $logger = self::$container->get(LoggerInterface::class);
+        $logger = static::getContainer()->get(LoggerInterface::class);
 
         $request = Request::create('/upload');
         $controller($request, $logger);
@@ -127,11 +129,10 @@ class ControllerTest extends KernelTestCase
     {
         $this->expectException(BadRequestHttpException::class);
 
-        self::bootKernel();
         /** @var UploadController $controller */
-        $controller = self::$container->get(UploadController::class);
+        $controller = static::getContainer()->get(UploadController::class);
         /** @var LoggerInterface $logger */
-        $logger = self::$container->get(LoggerInterface::class);
+        $logger = static::getContainer()->get(LoggerInterface::class);
 
         $request = Request::create('/upload');
         $request->files->set(UploadController::UPLOADED_FIELD, new UploadedFile($this->getDataDir('deserialization_tutorial6.pdf'), 'deserialization_tutorial6.pdf', null, null, true));
@@ -143,11 +144,10 @@ class ControllerTest extends KernelTestCase
     {
         $this->expectException(BadRequestHttpException::class);
 
-        self::bootKernel();
         /** @var UploadController $controller */
-        $controller = self::$container->get(UploadController::class);
+        $controller = static::getContainer()->get(UploadController::class);
         /** @var LoggerInterface $logger */
-        $logger = self::$container->get(LoggerInterface::class);
+        $logger = static::getContainer()->get(LoggerInterface::class);
         $request = Request::create('/upload');
         $request->files->set(UploadController::UPLOADED_FIELD, new UploadedFile($this->getDataDir('deserialization_tutorial6.pdf'), 'deserialization_tutorial6.pdf', null, null, true));
         $request->request->set(UploadController::HANDLER_NAME_FIELD, 'wrong_handler_name');
@@ -157,9 +157,8 @@ class ControllerTest extends KernelTestCase
 
     public function testNotAvailableToWrite(): void
     {
-        self::bootKernel();
         $filesystem = $this->createMock(Filesystem::class);
-        $filesystem->method('put')->willReturn(false);
+        $filesystem->method('write')->willThrowException(new UnableToWriteFile());
 
         $handler = $this->createMock(HandlerInterface::class);
         $handler->method('getFilesystem')->willReturn($filesystem);
@@ -174,7 +173,7 @@ class ControllerTest extends KernelTestCase
         /** @var FileReceiverInterface $receiver */
         $controller = new UploadController($receiver);
         /** @var LoggerInterface $logger */
-        $logger = self::$container->get(LoggerInterface::class);
+        $logger = static::getContainer()->get(LoggerInterface::class);
         $uuid = \uuid_create();
         $request = $this->request($uuid, 0);
 

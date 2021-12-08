@@ -16,11 +16,12 @@ class FileReceiver implements FileReceiverInterface
 
     public function getHandler(string $name): HandlerInterface
     {
-        $fileHandler = $this->fileHandlers[$name] ?? null;
-        if (!$fileHandler instanceof HandlerInterface) {
-            throw new HandlerNotFoundException($name);
+        foreach ($this->fileHandlers as $fileHandler) {
+            if ($fileHandler instanceof HandlerInterface && $fileHandler->getName() === $name) {
+                return $fileHandler;
+            }
         }
 
-        return $fileHandler;
+        throw new HandlerNotFoundException($name);
     }
 }

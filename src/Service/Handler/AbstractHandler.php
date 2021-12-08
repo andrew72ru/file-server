@@ -121,9 +121,6 @@ abstract class AbstractHandler implements HandlerInterface
         return \sprintf('%s/%s', \sys_get_temp_dir(), $this->chunk->getUniqueId());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function isFinished(): bool
     {
         $this->validate();
@@ -131,9 +128,6 @@ abstract class AbstractHandler implements HandlerInterface
         return ($this->chunk->getNumber() + 1) >= $this->chunk->getChunksCount();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getPercents(): int
     {
         $this->validate();
@@ -142,9 +136,6 @@ abstract class AbstractHandler implements HandlerInterface
         return (int) \ceil($value * 100);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getFullFile(): ?string
     {
         if ($this->isFinished()) {
@@ -208,9 +199,6 @@ abstract class AbstractHandler implements HandlerInterface
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getFilesystem(): FilesystemOperator
     {
         return $this->filesystem;

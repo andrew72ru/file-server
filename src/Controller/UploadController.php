@@ -34,21 +34,22 @@ class UploadController extends AbstractController
         $this->fileReceiver = $fileReceiver;
     }
 
-    /**
-     * @throws FilesystemException
-     */
     private function checkIfWritable(FilesystemOperator $filesystem, LoggerInterface $logger): void
     {
         $tempFile = \uuid_create();
-        $filesystem->write($tempFile, 'Test file. Should be deleted.');
-        if (!$filesystem->fileExists($tempFile)) {
-            throw new HttpException(523, 'Unable to store file');
+        try {
+            $filesystem->write($tempFile, 'Test file. Should be deleted.');
+        } catch (FilesystemException $e) {
+            throw new HttpException(523, 'Unable to store file', $e);
         }
         try {
             $filesystem->delete($tempFile);
         } catch (FilesystemException $e) {
             $logger->error('Unable to delete temporary file', [
                 'file' => $tempFile,
+                'error' => $e::class,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTrace(),
             ]);
         }
     }
@@ -59,12 +60,12 @@ class UploadController extends AbstractController
         if (!$file instanceof UploadedFile) {
             throw new BadRequestHttpException(\sprintf('Upload request must contains file in \'%s\' field', self::UPLOADED_FIELD));
         }
-        $handlerName = $request->get(self::HANDLER_NAME_FIELD);
+        $handlerName = $request->request->get(self::HANDLER_NAME_FIELD);
         if ($handlerName === null) {
             throw new BadRequestHttpException(\sprintf('You should declare the handler name in request \'%s\' field', self::HANDLER_NAME_FIELD));
         }
         try {
-            $handler = $this->fileReceiver->getHandler($handlerName);
+            $handler = $this->fileReceiver->getHandler((string) $handlerName);
         } catch (HandlerNotFoundException $e) {
             throw new BadRequestHttpException($e->getMessage());
         }
