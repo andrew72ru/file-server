@@ -1,50 +1,34 @@
 FROM composer:latest as composer
-FROM php:7.4.7-fpm-alpine3.11 as php
+FROM php:8.1-fpm-alpine as php
 
 RUN set -xe && apk update && apk upgrade
 
 RUN set -xe \
     && apk add --no-cache \
+       ${PHPIZE_DEPS} \
        shadow \
        libzip-dev \
        libintl \
        icu \
        icu-dev \
-       bash \
        curl \
        libmcrypt \
        libmcrypt-dev \
        libxml2-dev \
-       freetype \
-       freetype-dev \
-       libpng \
-       libpng-dev \
-       libjpeg-turbo \
-       libjpeg-turbo-dev \
-       postgresql-dev \
-       mariadb-dev \
        pcre-dev \
        git \
-       g++ \
-       make \
-       autoconf \
        openssh \
        util-linux-dev \
        libuuid \
        gnu-libiconv \
     && docker-php-ext-install -j$(nproc) \
         zip \
-        gd \
-        intl \
-        soap \
         sockets \
         opcache \
         pcntl \
         sockets \
-        exif \
-        pdo_pgsql \
-        pdo_mysql \
-        iconv
+        iconv \
+        intl
 
 RUN pecl install redis && \
     docker-php-ext-enable redis && \

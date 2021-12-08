@@ -1,9 +1,11 @@
+FROM composer:latest as composer
 FROM php:8.1-fpm-alpine as php
 
 RUN set -xe && apk update && apk upgrade
 
 RUN set -xe \
     && apk add --no-cache \
+       ${PHPIZE_DEPS} \
        shadow \
        libzip-dev \
        libintl \
@@ -13,31 +15,18 @@ RUN set -xe \
        libmcrypt \
        libmcrypt-dev \
        libxml2-dev \
-       freetype \
-       freetype-dev \
-       libpng \
-       libpng-dev \
-       libjpeg-turbo \
-       libjpeg-turbo-dev \
-       postgresql-dev \
-       mariadb-dev \
        pcre-dev \
        git \
-       g++ \
-       make \
-       autoconf \
        openssh \
        util-linux-dev \
        libuuid \
        gnu-libiconv \
     && docker-php-ext-install -j$(nproc) \
         zip \
-        gd \
         sockets \
         opcache \
         pcntl \
         sockets \
-        exif \
         iconv \
         intl
 
@@ -50,9 +39,7 @@ RUN pecl install redis && \
     pecl install pcov && \
     docker-php-ext-enable pcov
 
-RUN curl -sS https://getcomposer.org/installer | php -- \
-    --install-dir=/usr/local/bin \
-    --filename=composer
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_MEMORY_LIMIT=-1
