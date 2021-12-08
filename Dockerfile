@@ -1,5 +1,5 @@
 FROM composer:latest as composer
-FROM php:8.1-fpm-alpine as php
+FROM php:8.1-fpm-alpine3.15 as php
 
 RUN set -xe && apk update && apk upgrade
 
