@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\File\File;
 
 interface FileChunkInterface
 {
+    public function getTargetPath(): ?string;
+
     /**
      * Chunk size.
      */

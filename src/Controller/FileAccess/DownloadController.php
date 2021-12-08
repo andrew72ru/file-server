@@ -46,7 +46,7 @@ class DownloadController extends AbstractFileAccessController
     protected function demo(Request $request, string $name): Response
     {
         $projectDir = $this->getParameter('kernel.project_dir');
-        if (!\is_scalar($projectDir)) {
+        if (!\is_string($projectDir)) {
             throw new \InvalidArgumentException('\'kernel.project_dir\' parameter should be a string');
         }
         $path = \sprintf('%s/config/demo/%s', $projectDir, $name);

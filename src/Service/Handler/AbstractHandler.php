@@ -1,14 +1,9 @@
-<?php
-/**
- * 02.05.2020.
- */
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace App\Service\Handler;
 
+use App\Service\Exception\FileHandlerException;
 use App\Service\Exception\InvalidCallException;
-use App\Service\FileChunk;
 use App\Service\FileChunkInterface;
 use League\Flysystem\FilesystemOperator;
 use Symfony\Component\HttpFoundation\File\File;
@@ -20,7 +15,7 @@ use Symfony\Component\Mime\MimeTypes;
  */
 abstract class AbstractHandler implements HandlerInterface
 {
-    protected ?FileChunk $chunk = null;
+    protected ?FileChunkInterface $chunk = null;
     protected FilesystemOperator $filesystem;
     protected ?string $urlPrefix = null;
 
@@ -44,9 +39,6 @@ abstract class AbstractHandler implements HandlerInterface
         return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function storeChunk(): bool
     {
         $this->validate();
@@ -54,14 +46,14 @@ abstract class AbstractHandler implements HandlerInterface
 
         $dirName = $this->tempDirName();
         if (!\is_dir($dirName) && (!\mkdir($dirName) && !\is_dir($dirName))) {
-            throw new \RuntimeException(\sprintf('Directory "%s" was not created', $dirName));
+            throw new FileHandlerException(\sprintf('Directory "%s" was not created', $dirName));
         }
 
-        $destName = \sprintf('%s/%s', $dirName, $this->chunk->getNumber());
+        $destName = $this->dirName($dirName, $this->getChunk()->getNumber());
         $dst = \fopen($destName, 'ab');
         $inc = \fopen($file->getRealPath(), 'rb');
         if (!\is_file($file->getRealPath())) {
-            throw new \RuntimeException(\sprintf('File %s not a file', $file->getRealPath()));
+            throw new FileHandlerException(\sprintf('File %s not a file', $file->getRealPath()));
         }
         while ($b = \fread($inc, 4096)) {
             \fwrite($dst, $b);
@@ -85,9 +77,10 @@ abstract class AbstractHandler implements HandlerInterface
 
         $dirName = $this->tempDirName();
         $files = \iterator_to_array(new \FilesystemIterator($dirName));
-        \uasort($files, fn (\SplFileInfo $a, \SplFileInfo $b): int => ((int) $a->getBasename() < (int) $b->getBasename()) ? -1 : 1);
+        $files = \array_filter($files, static fn ($element) => $element instanceof \SplFileInfo);
+        \uasort($files, static fn (\SplFileInfo $a, \SplFileInfo $b): int => ((int) $a->getBasename() < (int) $b->getBasename()) ? -1 : 1);
 
-        $dstPath = \sprintf('%s/%s', \sys_get_temp_dir(), $this->getFilename());
+        $dstPath = $this->dirName(\sys_get_temp_dir(), $this->getFilename());
         $dst = \fopen($dstPath, 'ab');
 
         foreach ($files as $file) {
@@ -101,7 +94,7 @@ abstract class AbstractHandler implements HandlerInterface
         \fclose($dst);
 
         $dstRead = \fopen($dstPath, 'rb');
-        $targetName = \sprintf('%s/%s', \rtrim(($this->getTargetPath() ?? ''), '/'), $this->getFilename());
+        $targetName = $this->dirName(\rtrim(($this->getTargetPath() ?? ''), '/'), $this->getFilename());
         $this->filesystem->writeStream($targetName, $dstRead);
 
         \fclose($dstRead);
@@ -118,20 +111,20 @@ abstract class AbstractHandler implements HandlerInterface
 
     protected function tempDirName(): string
     {
-        return \sprintf('%s/%s', \sys_get_temp_dir(), $this->chunk->getUniqueId());
+        return $this->dirName(\sys_get_temp_dir(), $this->getChunk()->getUniqueId());
     }
 
     public function isFinished(): bool
     {
         $this->validate();
 
-        return ($this->chunk->getNumber() + 1) >= $this->chunk->getChunksCount();
+        return ($this->getChunk()->getNumber() + 1) >= $this->getChunk()->getChunksCount();
     }
 
     public function getPercents(): int
     {
         $this->validate();
-        $value = $this->chunk->getNumber() / $this->chunk->getChunksCount();
+        $value = $this->getChunk()->getNumber() / $this->getChunk()->getChunksCount();
 
         return (int) \ceil($value * 100);
     }
@@ -151,12 +144,12 @@ abstract class AbstractHandler implements HandlerInterface
             return null;
         }
 
-        if (($tp = $this->chunk->getTargetPath()) !== null) {
-            $filename = \sprintf('%s/%s', \rtrim($tp, '/'), $filename);
+        if (($tp = $this->getChunk()->getTargetPath()) !== null) {
+            $filename = $this->dirName(\rtrim($tp, '/'), $filename);
         }
 
         if ($this->urlPrefix !== null) {
-            return \sprintf('%s/%s', \rtrim($this->urlPrefix, '/'), $filename);
+            return $this->dirName(\rtrim($this->urlPrefix, '/'), $filename);
         }
 
         return null;
@@ -173,12 +166,12 @@ abstract class AbstractHandler implements HandlerInterface
             ? $file->getClientMimeType() : $file->getMimeType();
 
         $extension = 'bin';
-        $ex = MimeTypes::getDefault()->getExtensions($mime);
+        $ex = MimeTypes::getDefault()->getExtensions($mime ?? 'application/octet-stream');
         if (!empty($ex)) {
             $extension = $ex[0];
         }
 
-        return \sprintf('%s.%s', $this->chunk->getUniqueId(), $extension);
+        return \sprintf('%s.%s', $this->getChunk()->getUniqueId(), $extension);
     }
 
     /**
@@ -186,7 +179,16 @@ abstract class AbstractHandler implements HandlerInterface
      */
     protected function getFile(): File
     {
-        return $this->chunk->getFile();
+        return $this->getChunk()->getFile();
+    }
+
+    protected function getChunk(): FileChunkInterface
+    {
+        if (($existingChunk = $this->chunk) === null) {
+            throw new InvalidCallException(\sprintf('You must set \'%s\' instance to handler first', FileChunkInterface::class));
+        }
+
+        return $existingChunk;
     }
 
     /**
@@ -195,12 +197,17 @@ abstract class AbstractHandler implements HandlerInterface
     protected function validate(): void
     {
         if ($this->chunk === null) {
-            throw new InvalidCallException(\sprintf('You must set \'%s\' instance to handler first', FileChunk::class));
+            throw new InvalidCallException(\sprintf('You must set \'%s\' instance to handler first', FileChunkInterface::class));
         }
     }
 
     public function getFilesystem(): FilesystemOperator
     {
         return $this->filesystem;
+    }
+
+    private function dirName(string $path, string | int $name): string
+    {
+        return \sprintf('%s/%s', $path, $name);
     }
 }

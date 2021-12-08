@@ -35,12 +35,12 @@ class DirectUploadController extends AbstractController
             throw new BadRequestHttpException($file->getErrorMessage());
         }
 
-        $handlerName = $request->get(UploadController::HANDLER_NAME_FIELD);
+        $handlerName = $request->request->get(UploadController::HANDLER_NAME_FIELD);
         if ($handlerName === null) {
             throw new BadRequestHttpException(\sprintf('You should declare the handler name in request \'%s\' field', UploadController::HANDLER_NAME_FIELD));
         }
         try {
-            $fs = $this->fileReceiver->getHandler($handlerName)->getFilesystem();
+            $fs = $this->fileReceiver->getHandler((string) $handlerName)->getFilesystem();
         } catch (HandlerNotFoundException $e) {
             throw new BadRequestHttpException($e->getMessage());
         }
@@ -48,8 +48,8 @@ class DirectUploadController extends AbstractController
         $slugger = new AsciiSlugger();
         $remoteHost = $request->server->get('REMOTE_HOST', '');
         $path = $slugger->slug($remoteHost)->toString();
-        if (($tp = $request->get(FileChunk::TARGET_PATH)) !== null) {
-            $path = \sprintf('%s/%s', $path, \ltrim($tp, '/'));
+        if (($tp = $request->request->get(FileChunk::TARGET_PATH)) !== null) {
+            $path = \sprintf('%s/%s', $path, \ltrim((string) $tp, '/'));
         }
         $targetName = \sprintf('%s/%s.%s', $path, \uuid_create(), ($file->guessExtension() ?? ''));
 
