@@ -25,13 +25,13 @@ build:
 test:
   stage: test
   image: $CI_REGISTRY_IMAGE/app/dev:latest
-  variables:
-    APP_ENV: test
-    APP_DEBUG: true
   only:
     refs:
       - develop
       - feature/upgrade
+  variables:
+    APP_ENV: test
+    APP_DEBUG: 'true'
   before_script:
     - composer install --prefer-dist --optimize-autoloader --classmap-authoritative --no-interaction --no-ansi
   script:
