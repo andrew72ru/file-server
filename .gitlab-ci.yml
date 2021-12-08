@@ -16,6 +16,7 @@ build:
   only:
     refs:
       - master
+      - feature/upgrade
   script:
     - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
     - docker build -t $CI_REGISTRY_IMAGE/app/dev:latest -f Dockerfile .
@@ -27,6 +28,7 @@ test:
   only:
     refs:
       - develop
+      - feature/upgrade
   before_script:
     - composer install --prefer-dist --optimize-autoloader --classmap-authoritative --no-interaction --no-ansi
   script:
@@ -41,6 +43,7 @@ build_prod:
   only:
     refs:
       - master
+      - feature/upgrade
   script:
     - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
     - docker build -t $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA} -f selectel.Dockerfile .
@@ -53,6 +56,7 @@ deploy:
   only:
     refs:
       - master
+      - feature/upgrade
   variables:
     WORKING_IMAGE: $CI_REGISTRY_IMAGE/app/prod:${CI_COMMIT_SHORT_SHA}
   script:
