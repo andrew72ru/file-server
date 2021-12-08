@@ -37,9 +37,9 @@ test:
 
 build_prod:
   stage: build_prod
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
+  image: docker:latest
+    services:
+      - docker:dind
   only:
     refs:
       - master
