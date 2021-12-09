@@ -4,6 +4,9 @@ parameters:
   video_url_prefix: '%env(VIDEO_URL_PREFIX)%'
   security_header_secret: '%env(SECURITY_HEADER_SECRET)%'
 
+imports:
+  { resource: aws.yaml }
+
 services:
   _defaults:
     autowire: true      # Automatically injects dependencies in your services.
@@ -16,18 +19,6 @@ services:
   App\Controller\:
     resource: '../src/Controller'
     tags: ['controller.service_arguments']
-
-  Aws\S3\S3ClientInterface:
-    class: Aws\S3\S3Client
-    arguments:
-      -
-        version: 'latest'
-        region: 'ru-1a'
-        use_path_style_endpoint: true
-        endpoint: '%env(SELECTEL_S3_ENDPOINT)%'
-        credentials:
-          key: '%env(SELECTEL_CLIENT_ID)%'
-          secret: '%env(SELECTEL_CLIENT_PASSWORD)%'
 
   file_handler.image:
     class: App\Service\Handler\ImageHandler
@@ -54,7 +45,7 @@ services:
     arguments:
       $adapters: { images: '@oneup_flysystem.image.adapter_adapter', video: '@oneup_flysystem.video.adapter_adapter' }
       $s3Client: '@Aws\S3\S3ClientInterface'
-      $bucket: '%env(SELECTEL_CONTAINER)%'
+      $bucket: '%env(AWS_BUCKET)%'
 
   App\Controller\FileAccess\DeleteController:
     arguments:

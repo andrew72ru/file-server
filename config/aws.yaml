@@ -1,0 +1,16 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  Aws\S3\S3ClientInterface:
+    class: Aws\S3\S3Client
+    arguments:
+      -
+        version: 'latest'
+        region: '%env(S3_REGION)%'
+        use_path_style_endpoint: '%env(bool:S3_PATH_STYLE)%'
+        endpoint: '%env(S3_ENDPOINT)%'
+        credentials:
+          key: '%env(AWS_KEY)%'
+          secret: '%env(AWS_SECRET)%'
